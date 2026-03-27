@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EndNote 2025 Starter Tutorial</title>
+  <meta name="description" content="Interactive beginner tutorial for learning the basics of EndNote 2025." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__inner">
+      <p class="eyebrow">GitHub-ready prototype</p>
+      <h1>EndNote 2025 Interactive Starter Tutorial</h1>
+      <p class="hero__lead">
+        A simple guided learning page for first-time EndNote users. It combines step-by-step modules,
+        practice tasks, quick checks, and saved progress in the browser.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#modules">Start tutorial</a>
+        <button class="btn btn--secondary" id="resetProgressBtn" type="button">Reset progress</button>
+      </div>
+      <div class="progress-panel" aria-live="polite">
+        <div class="progress-panel__top">
+          <strong>Your progress</strong>
+          <span id="progressText">0% complete</span>
+        </div>
+        <div class="progress-bar" aria-hidden="true">
+          <div class="progress-bar__fill" id="progressFill"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>What this prototype does</h2>
+        <ul class="compact-list">
+          <li>Guides a beginner through the basics</li>
+          <li>Tracks progress using local browser storage</li>
+          <li>Includes practice activities and mini quizzes</li>
+          <li>Uses official support links for deeper learning</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Suggested audience</h2>
+        <p>Students, researchers, and staff who have never used EndNote before.</p>
+      </section>
+
+      <section class="card">
+        <h2>Before you begin</h2>
+        <ul class="compact-list">
+          <li>Make sure EndNote 2025 is installed</li>
+          <li>Have Microsoft Word available for CWYW practice</li>
+          <li>Keep one sample PDF or article handy</li>
+        </ul>
+      </section>
+    </aside>
+
+    <section class="content" id="modules">
+      <article class="module card" data-module="module1">
+        <div class="module__header">
+          <div>
+            <p class="module__label">Module 1</p>
+            <h2>Getting started with EndNote</h2>
+          </div>
+          <label class="check-pill">
+            <input type="checkbox" class="module-check" data-key="module1" />
+            <span>Mark complete</span>
+          </label>
+        </div>
+        <p>
+          Learn what EndNote is, what a library does, and how to create your first library file.
+        </p>
+        <div class="callout">
+          <strong>Practice task:</strong> Open EndNote 2025 and create a new library named
+          <code>MyResearch.enl</code>.
+        </div>
+        <details>
+          <summary>Show guided steps</summary>
+          <ol>
+            <li>Open EndNote.</li>
+            <li>Select <strong>Create a New Library</strong>.</li>
+            <li>Name it <strong>MyResearch.enl</strong>.</li>
+            <li>Save it somewhere easy to find.</li>
+          </ol>
+        </details>
+        <div class="quiz" data-quiz="quiz1">
+          <h3>Quick check</h3>
+          <p>What is the main purpose of an EndNote library?</p>
+          <div class="quiz__options">
+            <button type="button" data-correct="false">To write the full article for you</button>
+            <button type="button" data-correct="true">To store and organize references</button>
+            <button type="button" data-correct="false">To replace Microsoft Word</button>
+          </div>
+          <p class="quiz__feedback" aria-live="polite"></p>
+        </div>
+      </article>
+
+      <article class="module card" data-module="module2">
+        <div class="module__header">
+          <div>
+            <p class="module__label">Module 2</p>
+            <h2>Adding references</h2>
+          </div>
+          <label class="check-pill">
+            <input type="checkbox" class="module-check" data-key="module2" />
+            <span>Mark complete</span>
+          </label>
+        </div>
+        <p>
+          Learn three beginner-friendly ways to add content: manual entry, importing a file, and bringing in a PDF.
+        </p>
+        <div class="callout">
+          <strong>Practice task:</strong> Add one journal article, one book, and one PDF-based reference.
+        </div>
+        <details>
+          <summary>Show guided steps</summary>
+          <ol>
+            <li>Use <strong>References &gt; New Reference</strong> for manual entry.</li>
+            <li>Use the import option for exported database files.</li>
+            <li>Drag and drop a PDF to test automatic reference creation.</li>
+          </ol>
+        </details>
+        <div class="quiz" data-quiz="quiz2">
+          <h3>Quick check</h3>
+          <p>Which action is best when a database gives you a file to export?</p>
+          <div class="quiz__options">
+            <button type="button" data-correct="true">Import the reference file into EndNote</button>
+            <button type="button" data-correct="false">Type everything from scratch every time</button>
+            <button type="button" data-correct="false">Delete the file and start over</button>
+          </div>
+          <p class="quiz__feedback" aria-live="polite"></p>
+        </div>
+      </article>
+
+      <article class="module card" data-module="module3">
+        <div class="module__header">
+          <div>
+            <p class="module__label">Module 3</p>
+            <h2>Organizing your library</h2>
+          </div>
+          <label class="check-pill">
+            <input type="checkbox" class="module-check" data-key="module3" />
+            <span>Mark complete</span>
+          </label>
+        </div>
+        <p>
+          Keep references easy to find by using groups, group sets, and keywords or tags.
+        </p>
+        <div class="callout">
+          <strong>Practice task:</strong> Create a group called <strong>Thesis Sources</strong> and add at least three references.
+        </div>
+        <details>
+          <summary>Show guided steps</summary>
+          <ol>
+            <li>Create a custom group.</li>
+            <li>Drag references into the group.</li>
+            <li>Add useful keywords or notes for retrieval.</li>
+          </ol>
+        </details>
+        <div class="quiz" data-quiz="quiz3">
+          <h3>Quick check</h3>
+          <p>Why are groups useful in EndNote?</p>
+          <div class="quiz__options">
+            <button type="button" data-correct="true">They help organize references by topic or project</button>
+            <button type="button" data-correct="false">They permanently delete duplicate references</button>
+            <button type="button" data-correct="false">They stop citations from formatting in Word</button>
+          </div>
+          <p class="quiz__feedback" aria-live="polite"></p>
+        </div>
+      </article>
+
+      <article class="module card" data-module="module4">
+        <div class="module__header">
+          <div>
+            <p class="module__label">Module 4</p>
+            <h2>Cite While You Write in Word</h2>
+          </div>
+          <label class="check-pill">
+            <input type="checkbox" class="module-check" data-key="module4" />
+            <span>Mark complete</span>
+          </label>
+        </div>
+        <p>
+          Learn how to insert citations into Microsoft Word and switch between reference styles like APA 7th.
+        </p>
+        <div class="callout">
+          <strong>Practice task:</strong> Insert one citation in Word and change the bibliography style to <strong>APA 7th</strong>.
+        </div>
+        <details>
+          <summary>Show guided steps</summary>
+          <ol>
+            <li>Open a Word document.</li>
+            <li>Go to the EndNote tab in Word.</li>
+            <li>Choose <strong>Insert Citation</strong>.</li>
+            <li>Select a style such as APA 7th.</li>
+          </ol>
+        </details>
+        <div class="quiz" data-quiz="quiz4">
+          <h3>Quick check</h3>
+          <p>What happens when you change the output style in Word?</p>
+          <div class="quiz__options">
+            <button type="button" data-correct="true">The citations and bibliography reformat automatically</button>
+            <button type="button" data-correct="false">Your EndNote library gets deleted</button>
+            <button type="button" data-correct="false">The document becomes read-only</button>
+          </div>
+          <p class="quiz__feedback" aria-live="polite"></p>
+        </div>
+      </article>
+
+      <article class="module card" data-module="module5">
+        <div class="module__header">
+          <div>
+            <p class="module__label">Module 5</p>
+            <h2>Syncing and backup basics</h2>
+          </div>
+          <label class="check-pill">
+            <input type="checkbox" class="module-check" data-key="module5" />
+            <span>Mark complete</span>
+          </label>
+        </div>
+        <p>
+          Finish with basic sync awareness, safe backup habits, and beginner good practice.
+        </p>
+        <div class="callout">
+          <strong>Practice task:</strong> Review how sync works and make a backup copy of your library folder.
+        </div>
+        <details>
+          <summary>Show guided steps</summary>
+          <ol>
+            <li>Sign in to your EndNote account if sync is available in your setup.</li>
+            <li>Use the sync option carefully for the same library.</li>
+            <li>Back up both the <code>.enl</code> file and its matching <code>.Data</code> folder.</li>
+          </ol>
+        </details>
+        <div class="quiz" data-quiz="quiz5">
+          <h3>Quick check</h3>
+          <p>When backing up an EndNote library, what should you keep together?</p>
+          <div class="quiz__options">
+            <button type="button" data-correct="true">The .enl file and the matching .Data folder</button>
+            <button type="button" data-correct="false">Only the Word document</button>
+            <button type="button" data-correct="false">Only the PDF attachments</button>
+          </div>
+          <p class="quiz__feedback" aria-live="polite"></p>
+        </div>
+      </article>
+
+      <section class="card resources">
+        <h2>Official learning resources</h2>
+        <ul>
+          <li><a href="https://support.clarivate.com/Endnote/s/article/EndNote-2025-Help-Guide-and-Quick-Reference-Guide?language=en_US" target="_blank" rel="noopener noreferrer">EndNote 2025 Help Guide and Quick Reference Guide</a></li>
+          <li><a href="https://researchsoftware.com/manuals" target="_blank" rel="noopener noreferrer">EndNote manuals</a></li>
+          <li><a href="https://support.clarivate.com/Endnote/s/article/EndNote-Free-Training-Videos-Available-on-YouTube-and-Live-Training-Calendar" target="_blank" rel="noopener noreferrer">Official video training and live training links</a></li>
+          <li><a href="https://clarivate.com/academia-government/training-support/endnote/" target="_blank" rel="noopener noreferrer">Clarivate EndNote training hub</a></li>
+        </ul>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>This is a starter prototype intended for GitHub testing before moving to a larger hosted environment.</p>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
