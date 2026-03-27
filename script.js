@@ -394,7 +394,9 @@ function getSimulationMarkup(simulation) {
     return `
       <div class="simulation-box">
         <h4>Interactive demo: create a library</h4>
-        <p>Click the buttons in sequence and watch the result preview update.</p>
+        <p>Click through the same order a real beginner would follow in EndNote.</p>
+        <div class="sim-instruction" id="simInstruction">Start here: click <strong>Open EndNote</strong>.</div>
+        <div class="sim-guidance"><span class="sim-guidance-arrow">↓</span><span>Follow the highlighted button.</span></div>
         <div class="sim-toolbar">
           <button type="button" class="btn secondary sim-action" data-sim-action="open-endnote">Open EndNote</button>
           <button type="button" class="btn secondary sim-action" data-sim-action="choose-new-library">Create New Library</button>
@@ -422,6 +424,8 @@ function getSimulationMarkup(simulation) {
       <div class="simulation-box">
         <h4>Interactive demo: insert a citation in Word</h4>
         <p>Use the demo controls to mimic a simple Cite While You Write workflow.</p>
+        <div class="sim-instruction" id="simInstruction">Start here: click <strong>Open Word</strong>.</div>
+        <div class="sim-guidance"><span class="sim-guidance-arrow">↓</span><span>Follow the highlighted button.</span></div>
         <div class="sim-toolbar">
           <button type="button" class="btn secondary sim-action" data-sim-action="open-word">Open Word</button>
           <button type="button" class="btn secondary sim-action" data-sim-action="open-endnote-tab">Open EndNote Tab</button>
@@ -435,7 +439,7 @@ function getSimulationMarkup(simulation) {
               <span>Word document preview</span>
             </div>
             <div class="sim-content" id="simOutputArea">
-              <div class="sim-doc-preview">This is a research sentence waiting for a citation.</div>
+              <div class="sim-doc-preview">Click <strong>Open Word</strong> to begin the simulation.</div>
             </div>
           </div>
           <ol class="sim-log" id="simLog"></ol>
@@ -597,12 +601,41 @@ function addSimLog(logEl, message) {
   logEl.appendChild(item);
 }
 
+function clearButtonState(buttons) {
+  buttons.forEach(btn => btn.classList.remove("selected", "next-target"));
+}
+
+function markActive(buttons, button) {
+  clearButtonState(buttons);
+  if (button) button.classList.add("selected");
+}
+
+function markDone(button) {
+  if (!button) return;
+  button.classList.add("correct");
+  button.disabled = true;
+  button.classList.remove("next-target");
+}
+
+function setNextTarget(buttons, button, instructionEl, message) {
+  clearButtonState(buttons);
+  buttons.forEach(btn => {
+    if (!btn.classList.contains("correct")) btn.disabled = true;
+  });
+  if (button) {
+    button.disabled = false;
+    button.classList.add("next-target");
+  }
+  if (instructionEl) instructionEl.innerHTML = message;
+}
+
 function attachSimulationHandlers(step) {
   if (!step.simulation || !el.stepCard) return;
 
   const output = el.stepCard.querySelector("#simOutputArea");
   const log = el.stepCard.querySelector("#simLog");
-  const buttons = el.stepCard.querySelectorAll(".sim-action");
+  const instruction = el.stepCard.querySelector("#simInstruction");
+  const buttons = [...el.stepCard.querySelectorAll(".sim-action")];
   const simState = {
     open: false,
     created: false,
@@ -613,88 +646,201 @@ function attachSimulationHandlers(step) {
     citationInserted: false
   };
 
-  buttons.forEach(button => {
-    button.addEventListener("click", () => {
-      const action = button.dataset.simAction;
+  function updateOutput(html) {
+    if (!output) return;
+    output.innerHTML = html;
+  }
 
-      if (step.simulation.type === "libraryCreate") {
+  if (step.simulation.type === "libraryCreate") {
+    const btnOpen = buttons.find(b => b.dataset.simAction === "open-endnote");
+    const btnCreate = buttons.find(b => b.dataset.simAction === "choose-new-library");
+    const btnName = buttons.find(b => b.dataset.simAction === "name-library");
+    const btnSave = buttons.find(b => b.dataset.simAction === "save-library");
+
+    buttons.forEach(btn => btn.disabled = true);
+    if (btnOpen) btnOpen.disabled = false;
+    if (btnOpen) btnOpen.classList.add("next-target");
+
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.simAction;
+        markActive(buttons, button);
+
         if (action === "open-endnote") {
           simState.open = true;
-          if (output) output.innerHTML = `<span class="sim-pill">EndNote opened</span><p>The EndNote start screen is now visible. You can create or open a library from here.</p>`;
+          updateOutput(`
+            <div class="sim-doc-preview sim-highlight">
+              <span class="sim-pill">EndNote opened</span>
+              <p>The EndNote start screen is now visible. You can create or open a library from here.</p>
+            </div>
+          `);
           addSimLog(log, "Opened EndNote.");
+          markDone(btnOpen);
+          setNextTarget(buttons, btnCreate, instruction, 'Good. Now click <strong>Create New Library</strong>.');
         }
 
         if (action === "choose-new-library") {
-          if (!simState.open) {
-            if (output) output.innerHTML = "<p>Please open EndNote first.</p>";
-            return;
-          }
+          if (!simState.open) return;
           simState.created = true;
-          if (output) output.innerHTML = `<span class="sim-pill">Create a New Library</span><p>The <strong>Create a New Library</strong> dialog is ready.</p><div class="sim-file-row"><span>File name</span><strong>MyResearch.enl</strong></div>`;
+          updateOutput(`
+            <div class="sim-doc-preview sim-highlight">
+              <span class="sim-pill">Create a New Library</span>
+              <p>The <strong>Create a New Library</strong> dialog is ready.</p>
+              <div class="sim-file-row"><span>File name</span><strong>MyResearch.enl</strong></div>
+            </div>
+          `);
           addSimLog(log, "Selected Create a New Library.");
+          markDone(btnCreate);
+          setNextTarget(buttons, btnName, instruction, 'Now click <strong>Name Library</strong>.');
         }
 
         if (action === "name-library") {
-          if (!simState.created) {
-            if (output) output.innerHTML = "<p>Choose <strong>Create a New Library</strong> first.</p>";
-            return;
-          }
+          if (!simState.created) return;
           simState.named = true;
-          if (output) output.innerHTML = `<span class="sim-pill">Library named</span><div class="sim-file-row"><span>Library file</span><strong>MyResearch.enl</strong></div><div class="sim-file-row"><span>Location</span><strong>Documents/EndNote Practice</strong></div>`;
+          updateOutput(`
+            <div class="sim-doc-preview sim-highlight">
+              <span class="sim-pill">Library named</span>
+              <div class="sim-file-row"><span>Library file</span><strong>MyResearch.enl</strong></div>
+              <div class="sim-file-row"><span>Location</span><strong>Documents/EndNote Practice</strong></div>
+            </div>
+          `);
           addSimLog(log, "Named the library MyResearch.enl.");
+          markDone(btnName);
+          setNextTarget(buttons, btnSave, instruction, 'Finally, click <strong>Save Library</strong>.');
         }
 
         if (action === "save-library") {
-          if (!simState.named) {
-            if (output) output.innerHTML = "<p>Name the library before saving it.</p>";
-            return;
-          }
+          if (!simState.named) return;
           simState.saved = true;
-          if (output) output.innerHTML = `<span class="sim-pill">Library saved</span><div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>MyResearch.enl</span></div><div class="sim-content"><div class="sim-ref-row"><span>Library status</span><strong>Ready for references</strong></div><div class="sim-ref-row"><span>Groups</span><strong>My Groups</strong></div></div></div>`;
+          updateOutput(`
+            <div class="sim-window sim-highlight">
+              <div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>MyResearch.enl</span></div>
+              <div class="sim-content">
+                <div class="sim-ref-row"><span>Library status</span><strong>Ready for references</strong></div>
+                <div class="sim-ref-row"><span>Groups</span><strong>My Groups</strong></div>
+              </div>
+            </div>
+          `);
           addSimLog(log, "Saved the library and opened it.");
+          markDone(btnSave);
+          if (instruction) instruction.innerHTML = 'Done. You have completed the demo. Review the result preview, then continue.';
           setStepStatus(state.activeModule, state.activeStep, { simulationCompleted: true });
         }
-      }
+      });
+    });
+  }
 
-      if (step.simulation.type === "wordCitation") {
+  if (step.simulation.type === "wordCitation") {
+    const btnOpenWord = buttons.find(b => b.dataset.simAction === "open-word");
+    const btnOpenTab = buttons.find(b => b.dataset.simAction === "open-endnote-tab");
+    const btnInsertCitation = buttons.find(b => b.dataset.simAction === "insert-citation");
+    const btnShowBibliography = buttons.find(b => b.dataset.simAction === "show-bibliography");
+
+    buttons.forEach(btn => btn.disabled = true);
+    if (btnOpenWord) btnOpenWord.disabled = false;
+    if (btnOpenWord) btnOpenWord.classList.add("next-target");
+
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.simAction;
+        markActive(buttons, button);
+
         if (action === "open-word") {
           simState.wordOpen = true;
-          if (output) output.innerHTML = `<div class="sim-doc-preview">This is a research sentence waiting for a citation.</div>`;
+          updateOutput(`
+            <div class="sim-window">
+              <div class="sim-window-bar">
+                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+                <span>Word document preview</span>
+              </div>
+              <div class="sim-content">
+                <div class="sim-doc-preview sim-highlight">
+                  This is a research sentence waiting for a citation.
+                </div>
+              </div>
+            </div>
+          `);
           addSimLog(log, "Opened Word.");
+          markDone(btnOpenWord);
+          setNextTarget(buttons, btnOpenTab, instruction, 'Good. Now click <strong>Open EndNote Tab</strong>.');
         }
 
         if (action === "open-endnote-tab") {
-          if (!simState.wordOpen) {
-            if (output) output.innerHTML = "<p>Open Word first.</p>";
-            return;
-          }
+          if (!simState.wordOpen) return;
           simState.tabOpen = true;
-          if (output) output.innerHTML = `<span class="sim-pill">EndNote tab active</span><div class="sim-doc-preview">This is a research sentence waiting for a citation.</div><p style="margin-top:12px;"><strong>EndNote tools available:</strong> Insert Citation, Style, Update Citations and Bibliography.</p>`;
+          updateOutput(`
+            <div class="sim-window">
+              <div class="sim-window-bar">
+                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+                <span>Word document preview</span>
+              </div>
+              <div class="sim-content">
+                <div class="sim-pill sim-highlight">EndNote tab active</div>
+                <div class="sim-doc-preview">
+                  This is a research sentence waiting for a citation.
+                </div>
+                <div class="sim-file-row sim-highlight">
+                  <span>Ribbon tools</span>
+                  <strong>Insert Citation | Style | Update Citations and Bibliography</strong>
+                </div>
+              </div>
+            </div>
+          `);
           addSimLog(log, "Opened the EndNote tab in Word.");
+          markDone(btnOpenTab);
+          setNextTarget(buttons, btnInsertCitation, instruction, 'Now click <strong>Insert Citation</strong>. Watch the sentence change.');
         }
 
         if (action === "insert-citation") {
-          if (!simState.tabOpen) {
-            if (output) output.innerHTML = "<p>Open the EndNote tab first.</p>";
-            return;
-          }
+          if (!simState.tabOpen) return;
           simState.citationInserted = true;
-          if (output) output.innerHTML = `<div class="sim-doc-preview">This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.</div>`;
+          updateOutput(`
+            <div class="sim-window">
+              <div class="sim-window-bar">
+                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+                <span>Word document preview</span>
+              </div>
+              <div class="sim-content">
+                <div class="sim-pill">Citation inserted</div>
+                <div class="sim-doc-preview">
+                  This is a research sentence <span class="sim-inline-citation sim-highlight">(Smith, 2020)</span> that now includes an in-text citation.
+                </div>
+              </div>
+            </div>
+          `);
           addSimLog(log, "Inserted the citation (Smith, 2020).");
+          markDone(btnInsertCitation);
+          setNextTarget(buttons, btnShowBibliography, instruction, 'Finally, click <strong>Show Bibliography</strong>. Watch the references section appear.');
         }
 
         if (action === "show-bibliography") {
-          if (!simState.citationInserted) {
-            if (output) output.innerHTML = "<p>Insert a citation before generating the bibliography preview.</p>";
-            return;
-          }
-          if (output) output.innerHTML = `<div class="sim-doc-preview">This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.<div class="sim-bibliography"><strong>References</strong><p>Smith, J. (2020). <em>Introduction to Research Writing</em>. Academic Press.</p></div></div>`;
+          if (!simState.citationInserted) return;
+          updateOutput(`
+            <div class="sim-window">
+              <div class="sim-window-bar">
+                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+                <span>Word document preview</span>
+              </div>
+              <div class="sim-content">
+                <div class="sim-pill">Bibliography generated</div>
+                <div class="sim-doc-preview">
+                  This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.
+                  <div class="sim-bibliography sim-highlight">
+                    <strong>References</strong>
+                    <p>Smith, J. (2020). <em>Introduction to Research Writing</em>. Academic Press.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `);
           addSimLog(log, "Displayed the bibliography preview.");
+          markDone(btnShowBibliography);
+          if (instruction) instruction.innerHTML = 'Done. You have completed the demo. Review the highlighted result, then continue.';
           setStepStatus(state.activeModule, state.activeStep, { simulationCompleted: true });
         }
-      }
+      });
     });
-  });
+  }
 }
 
 function showScreen(screenName) {
