@@ -20,17 +20,17 @@ const modules = [
         callout: "Think of EndNote as your personal reference library and citation assistant."
       },
       {
-        title: "Create your first library",
-        body: `A new user should begin by creating one library for a project, course, or thesis. This is usually the first practical action in EndNote training.",
-        listType: "ol",
-        list: [
-          "Open EndNote 2025",
-          "Choose Create a New Library",
-          "Name the file MyResearch.enl",
-          "Save it in an easy-to-find folder"
-        ],
-        callout: "Avoid scattering references across many tiny libraries unless you have a clear reason."
-      },
+  title: "Create your first library",
+  body: `A new user should begin by creating one library for a project, course, or thesis. This is usually the first practical action in EndNote training.`,
+  listType: "ol",
+  list: [
+    "Open EndNote 2025",
+    "Choose Create a New Library",
+    "Name the file MyResearch.enl",
+    "Save it in an easy-to-find folder"
+  ],
+  callout: "Avoid scattering references across many tiny libraries unless you have a clear reason."
+},
       {
         title: "Quick check",
         body: "Why is creating a library important before collecting references?",
