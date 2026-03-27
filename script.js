@@ -221,7 +221,7 @@ const modules = [
           "Practice editing citation output",
           "Build a department or faculty-specific training path later"
         ],
-        callout: "This GitHub version can later grow into a branded institutional training platform."
+        callout: "Tip: As you progress, try applying each step using your own research topic or assignment."
       },
       {
         title: "Final quick check",
