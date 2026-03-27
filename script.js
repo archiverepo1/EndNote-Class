@@ -1,3 +1,4 @@
+const storageKey = "endnote2025TrainingProgress";
 
 const modules = [
   {
@@ -9,7 +10,7 @@ const modules = [
     steps: [
       {
         title: "What EndNote is used for",
-        body: `EndNote helps a researcher collect references, organise them, store PDFs, and insert citations into a Word document while automatically building a bibliography.`,
+        body: "EndNote helps a researcher collect references, organise them, store PDFs, and insert citations into a Word document while automatically building a bibliography.",
         listType: "ul",
         list: [
           "Store journal articles, books, and reports in one place",
@@ -20,17 +21,18 @@ const modules = [
         callout: "Think of EndNote as your personal reference library and citation assistant."
       },
       {
-  title: "Create your first library",
-  body: `A new user should begin by creating one library for a project, course, or thesis. This is usually the first practical action in EndNote training.`,
-  listType: "ol",
-  list: [
-    "Open EndNote 2025",
-    "Choose Create a New Library",
-    "Name the file MyResearch.enl",
-    "Save it in an easy-to-find folder"
-  ],
-  callout: "Avoid scattering references across many tiny libraries unless you have a clear reason."
-},
+        title: "Create your first library",
+        body: "A new user should begin by creating one library for a project, course, or thesis. This is usually the first practical action in EndNote training.",
+        listType: "ol",
+        list: [
+          "Open EndNote 2025",
+          "Choose Create a New Library",
+          "Name the file MyResearch.enl",
+          "Save it in an easy-to-find folder"
+        ],
+        callout: "Avoid scattering references across many tiny libraries unless you have a clear reason.",
+        simulation: { type: "libraryCreate" }
+      },
       {
         title: "Quick check",
         body: "Why is creating a library important before collecting references?",
@@ -43,7 +45,8 @@ const modules = [
             "Because Word requires it before typing",
             "Because citation styles are stored outside EndNote"
           ],
-          feedback: "Correct. The library is the central place where references and related files are managed."
+          feedback: "Correct. The library is the central place where references and related files are managed.",
+          retryHint: "Review the earlier explanation of what a library does, then try again."
         }
       }
     ]
@@ -91,7 +94,8 @@ const modules = [
             "Review the metadata for accuracy and completeness",
             "Change the citation style first"
           ],
-          feedback: "Correct. Imported data often needs checking, especially author names, capitalization, and missing fields."
+          feedback: "Correct. Imported data often needs checking, especially author names, capitalization, and missing fields.",
+          retryHint: "Think about the most common issue after import: metadata quality."
         }
       }
     ]
@@ -139,7 +143,8 @@ const modules = [
             "They change a journal article into a book",
             "They automatically publish your bibliography"
           ],
-          feedback: "Correct. Groups are an organisational tool inside a single library."
+          feedback: "Correct. Groups are an organisational tool inside a single library.",
+          retryHint: "Go back to the explanation about how groups behave inside one library."
         }
       }
     ]
@@ -161,7 +166,8 @@ const modules = [
           "Place the cursor where the citation should appear",
           "Use Insert Citation to search and add a source"
         ],
-        callout: "If the tab is missing, that becomes a troubleshooting step, not a writing step."
+        callout: "If the tab is missing, that becomes a troubleshooting step, not a writing step.",
+        simulation: { type: "wordCitation" }
       },
       {
         title: "Change citation style",
@@ -187,7 +193,8 @@ const modules = [
             "It uploads the document to a publisher automatically",
             "It inserts citations and builds the bibliography as you write"
           ],
-          feedback: "Correct. CWYW links writing and referencing, saving a lot of manual formatting time."
+          feedback: "Correct. CWYW links writing and referencing, saving a lot of manual formatting time.",
+          retryHint: "Look again at the step showing the Word and EndNote connection."
         }
       }
     ]
@@ -235,7 +242,8 @@ const modules = [
             "Rename every citation style",
             "Export every reference as a PDF"
           ],
-          feedback: "Correct. Backups protect work and should be part of a normal routine."
+          feedback: "Correct. Backups protect work and should be part of a normal routine.",
+          retryHint: "Revisit the backup explanation and think about protecting both references and attachments."
         }
       }
     ]
@@ -245,7 +253,8 @@ const modules = [
 const state = {
   activeModule: 0,
   activeStep: 0,
-  progress: JSON.parse(localStorage.getItem("endnote2025TrainingProgress") || "{}")
+  progress: JSON.parse(localStorage.getItem(storageKey) || "{}"),
+  currentQuizPassed: false
 };
 
 const el = {
@@ -273,15 +282,24 @@ const el = {
   prevStepBtn: document.getElementById("prevStepBtn"),
   nextStepBtn: document.getElementById("nextStepBtn"),
   resetProgressBtn: document.getElementById("resetProgressBtn"),
-  jumpToCurrentBtn: document.getElementById("jumpToCurrentBtn")
+  jumpToCurrentBtn: document.getElementById("jumpToCurrentBtn"),
+  startTutorialBtn: document.getElementById("startTutorialBtn"),
+  viewModulesBtn: document.getElementById("viewModulesBtn"),
+  beginFromOverviewBtn: document.getElementById("beginFromOverviewBtn"),
+  restartTutorialBtn: document.getElementById("restartTutorialBtn"),
+  reviewModulesBtn: document.getElementById("reviewModulesBtn")
 };
 
 function saveProgress() {
-  localStorage.setItem("endnote2025TrainingProgress", JSON.stringify(state.progress));
+  localStorage.setItem(storageKey, JSON.stringify(state.progress));
 }
 
 function getModuleKey(moduleIndex) {
   return `module_${moduleIndex}`;
+}
+
+function getStepKey(moduleIndex, stepIndex) {
+  return `module_${moduleIndex}_step_${stepIndex}`;
 }
 
 function isModuleComplete(moduleIndex) {
@@ -293,6 +311,15 @@ function setModuleComplete(moduleIndex) {
   state.progress[key] = {
     ...(state.progress[key] || {}),
     completed: true
+  };
+  saveProgress();
+}
+
+function setStepStatus(moduleIndex, stepIndex, patch) {
+  const key = getStepKey(moduleIndex, stepIndex);
+  state.progress[key] = {
+    ...(state.progress[key] || {}),
+    ...patch
   };
   saveProgress();
 }
@@ -311,15 +338,18 @@ function updateOverallProgress() {
   const total = modules.length;
   const percent = Math.round((completed / total) * 100);
 
-  el.progressPercent.textContent = `${percent}%`;
-  el.progressFill.style.width = `${percent}%`;
-  el.progressText.textContent = `${completed} of ${total} modules completed`;
+  if (el.progressPercent) el.progressPercent.textContent = `${percent}%`;
+  if (el.progressFill) el.progressFill.style.width = `${percent}%`;
+  if (el.progressText) el.progressText.textContent = `${completed} of ${total} modules completed`;
 }
 
 function renderSidebarModules() {
+  if (!el.moduleList) return;
   el.moduleList.innerHTML = "";
+
   modules.forEach((module, index) => {
     const item = document.createElement("button");
+    item.type = "button";
     item.className = `module-item ${index === state.activeModule ? "active" : ""} ${isModuleComplete(index) ? "complete" : ""}`;
     item.innerHTML = `
       <strong>Module ${module.id}: ${module.title}</strong>
@@ -336,7 +366,9 @@ function renderSidebarModules() {
 }
 
 function renderOverview() {
+  if (!el.overviewGrid) return;
   el.overviewGrid.innerHTML = "";
+
   modules.forEach((module, index) => {
     const card = document.createElement("article");
     card.className = "overview-card";
@@ -355,23 +387,86 @@ function renderOverview() {
   });
 }
 
+function getSimulationMarkup(simulation) {
+  if (!simulation) return "";
+
+  if (simulation.type === "libraryCreate") {
+    return `
+      <div class="simulation-box">
+        <h4>Interactive demo: create a library</h4>
+        <p>Click the buttons in sequence and watch the result preview update.</p>
+        <div class="sim-toolbar">
+          <button type="button" class="btn secondary sim-action" data-sim-action="open-endnote">Open EndNote</button>
+          <button type="button" class="btn secondary sim-action" data-sim-action="choose-new-library">Create New Library</button>
+          <button type="button" class="btn secondary sim-action" data-sim-action="name-library">Name Library</button>
+          <button type="button" class="btn secondary sim-action" data-sim-action="save-library">Save Library</button>
+        </div>
+        <div class="sim-output">
+          <div class="sim-window">
+            <div class="sim-window-bar">
+              <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+              <span>EndNote preview</span>
+            </div>
+            <div class="sim-content" id="simOutputArea">
+              <p>Select <strong>Open EndNote</strong> to begin the walkthrough.</p>
+            </div>
+          </div>
+          <ol class="sim-log" id="simLog"></ol>
+        </div>
+      </div>
+    `;
+  }
+
+  if (simulation.type === "wordCitation") {
+    return `
+      <div class="simulation-box">
+        <h4>Interactive demo: insert a citation in Word</h4>
+        <p>Use the demo controls to mimic a simple Cite While You Write workflow.</p>
+        <div class="sim-toolbar">
+          <button type="button" class="btn secondary sim-action" data-sim-action="open-word">Open Word</button>
+          <button type="button" class="btn secondary sim-action" data-sim-action="open-endnote-tab">Open EndNote Tab</button>
+          <button type="button" class="btn secondary sim-action" data-sim-action="insert-citation">Insert Citation</button>
+          <button type="button" class="btn secondary sim-action" data-sim-action="show-bibliography">Show Bibliography</button>
+        </div>
+        <div class="sim-output">
+          <div class="sim-window">
+            <div class="sim-window-bar">
+              <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+              <span>Word document preview</span>
+            </div>
+            <div class="sim-content" id="simOutputArea">
+              <div class="sim-doc-preview">This is a research sentence waiting for a citation.</div>
+            </div>
+          </div>
+          <ol class="sim-log" id="simLog"></ol>
+        </div>
+      </div>
+    `;
+  }
+
+  return "";
+}
+
 function renderStep() {
   const module = modules[state.activeModule];
   const step = module.steps[state.activeStep];
+  if (!module || !step) return;
 
-  el.moduleCounter.textContent = `Module ${module.id} of ${modules.length}`;
-  el.stageEyebrow.textContent = `Module ${module.id}`;
-  el.stageTitle.textContent = module.title;
-  el.stageDescription.textContent = module.description;
-  el.stageStepCount.textContent = `Step ${state.activeStep + 1} of ${module.steps.length}`;
-  el.stageStatus.textContent = isModuleComplete(state.activeModule) ? "Completed" : "In progress";
-  el.practiceTask.textContent = module.practice;
-  el.keyTakeaway.textContent = module.takeaway;
+  state.currentQuizPassed = !step.quiz;
+
+  if (el.moduleCounter) el.moduleCounter.textContent = `Module ${module.id} of ${modules.length}`;
+  if (el.stageEyebrow) el.stageEyebrow.textContent = `Module ${module.id}`;
+  if (el.stageTitle) el.stageTitle.textContent = module.title;
+  if (el.stageDescription) el.stageDescription.textContent = module.description;
+  if (el.stageStepCount) el.stageStepCount.textContent = `Step ${state.activeStep + 1} of ${module.steps.length}`;
+  if (el.stageStatus) el.stageStatus.textContent = isModuleComplete(state.activeModule) ? "Completed" : "In progress";
+  if (el.practiceTask) el.practiceTask.textContent = module.practice;
+  if (el.keyTakeaway) el.keyTakeaway.textContent = module.takeaway;
 
   const modulePercent = Math.round(((state.activeStep + 1) / module.steps.length) * 100);
-  el.moduleProgressLabel.textContent = `Step ${state.activeStep + 1}`;
-  el.moduleProgressFill.style.width = `${modulePercent}%`;
-  el.moduleProgressText.textContent = `${state.activeStep + 1} of ${module.steps.length} steps viewed in this module`;
+  if (el.moduleProgressLabel) el.moduleProgressLabel.textContent = `Step ${state.activeStep + 1}`;
+  if (el.moduleProgressFill) el.moduleProgressFill.style.width = `${modulePercent}%`;
+  if (el.moduleProgressText) el.moduleProgressText.textContent = `${state.activeStep + 1} of ${module.steps.length} steps viewed in this module`;
 
   let listMarkup = "";
   if (step.list?.length) {
@@ -382,38 +477,61 @@ function renderStep() {
   let quizMarkup = "";
   if (step.quiz) {
     quizMarkup = `
-      <div class="quiz-box" data-correct="${step.quiz.correctIndex}">
+      <div class="quiz-box">
         <strong>${step.quiz.question}</strong>
         <div class="quiz-options">
-          ${step.quiz.options.map((option, i) => `<button class="option-btn" data-index="${i}">${option}</button>`).join("")}
+          ${step.quiz.options.map((option, i) => `<button type="button" class="option-btn" data-index="${i}">${option}</button>`).join("")}
         </div>
-        <button class="btn secondary" id="checkAnswerBtn">Check answer</button>
+        <button type="button" class="btn secondary" id="checkAnswerBtn">Check answer</button>
         <div class="feedback" id="quizFeedback"></div>
+        <div class="quiz-lock-note">You need the correct answer before you can continue to the next step.</div>
       </div>
     `;
   }
 
-  el.stepCard.innerHTML = `
-    <span class="step-label">Guided step</span>
-    <h3>${step.title}</h3>
-    <p>${step.body}</p>
-    ${listMarkup}
-    ${step.callout ? `<div class="callout">${step.callout}</div>` : ""}
-    ${quizMarkup}
-  `;
+  if (el.stepCard) {
+    el.stepCard.innerHTML = `
+      <span class="step-label">Guided step</span>
+      <h3>${step.title}</h3>
+      <p>${step.body}</p>
+      ${listMarkup}
+      ${step.callout ? `<div class="callout">${step.callout}</div>` : ""}
+      ${getSimulationMarkup(step.simulation)}
+      ${quizMarkup}
+    `;
+  }
 
   const prevDisabled = state.activeStep === 0;
-  el.prevStepBtn.disabled = prevDisabled;
-  el.prevStepBtn.style.opacity = prevDisabled ? 0.5 : 1;
-  el.prevStepBtn.style.cursor = prevDisabled ? "not-allowed" : "pointer";
-  el.nextStepBtn.textContent = state.activeStep === module.steps.length - 1 ? (state.activeModule === modules.length - 1 ? "Finish tutorial" : "Complete module") : "Next step";
+  if (el.prevStepBtn) {
+    el.prevStepBtn.disabled = prevDisabled;
+    el.prevStepBtn.style.opacity = prevDisabled ? "0.5" : "1";
+    el.prevStepBtn.style.cursor = prevDisabled ? "not-allowed" : "pointer";
+  }
+
+  if (el.nextStepBtn) {
+    el.nextStepBtn.textContent = state.activeStep === module.steps.length - 1
+      ? (state.activeModule === modules.length - 1 ? "Finish tutorial" : "Complete module")
+      : "Next step";
+
+    if (step.quiz) {
+      el.nextStepBtn.disabled = true;
+      el.nextStepBtn.style.opacity = "0.5";
+      el.nextStepBtn.style.cursor = "not-allowed";
+    } else {
+      el.nextStepBtn.disabled = false;
+      el.nextStepBtn.style.opacity = "1";
+      el.nextStepBtn.style.cursor = "pointer";
+    }
+  }
 
   attachQuizHandlers(step);
+  attachSimulationHandlers(step);
+  setStepStatus(state.activeModule, state.activeStep, { viewed: true });
   setLastLocation(state.activeModule, state.activeStep);
 }
 
 function attachQuizHandlers(step) {
-  if (!step.quiz) return;
+  if (!step.quiz || !el.stepCard) return;
 
   const optionButtons = el.stepCard.querySelectorAll(".option-btn");
   const checkButton = el.stepCard.querySelector("#checkAnswerBtn");
@@ -425,37 +543,163 @@ function attachQuizHandlers(step) {
       optionButtons.forEach(item => item.classList.remove("selected"));
       btn.classList.add("selected");
       selectedIndex = Number(btn.dataset.index);
-      feedback.textContent = "";
+      if (feedback) feedback.textContent = "";
     });
   });
 
-  checkButton.addEventListener("click", () => {
-    if (selectedIndex === null) {
-      feedback.textContent = "Please choose an answer first.";
-      feedback.style.color = "#b45309";
-      return;
-    }
+  if (checkButton) {
+    checkButton.addEventListener("click", () => {
+      if (!feedback) return;
 
-    optionButtons.forEach(item => item.classList.remove("correct", "incorrect"));
-    const correctIndex = step.quiz.correctIndex;
-    const selectedButton = [...optionButtons].find(btn => Number(btn.dataset.index) === selectedIndex);
-    const correctButton = [...optionButtons].find(btn => Number(btn.dataset.index) === correctIndex);
+      if (selectedIndex === null) {
+        feedback.textContent = "Please choose an answer first.";
+        feedback.style.color = "#b45309";
+        return;
+      }
 
-    if (selectedIndex === correctIndex) {
-      selectedButton.classList.add("correct");
-      feedback.textContent = step.quiz.feedback;
-      feedback.style.color = "#166534";
-    } else {
-      selectedButton.classList.add("incorrect");
-      correctButton.classList.add("correct");
-      feedback.textContent = `Not quite. ${step.quiz.feedback}`;
-      feedback.style.color = "#9f1239";
-    }
+      optionButtons.forEach(item => item.classList.remove("correct", "incorrect"));
+      const correctIndex = step.quiz.correctIndex;
+      const selectedButton = [...optionButtons].find(btn => Number(btn.dataset.index) === selectedIndex);
+      const correctButton = [...optionButtons].find(btn => Number(btn.dataset.index) === correctIndex);
+
+      if (selectedIndex === correctIndex) {
+        if (selectedButton) selectedButton.classList.add("correct");
+        feedback.textContent = step.quiz.feedback;
+        feedback.style.color = "#166534";
+        state.currentQuizPassed = true;
+        setStepStatus(state.activeModule, state.activeStep, { quizPassed: true });
+        if (el.nextStepBtn) {
+          el.nextStepBtn.disabled = false;
+          el.nextStepBtn.style.opacity = "1";
+          el.nextStepBtn.style.cursor = "pointer";
+        }
+      } else {
+        if (selectedButton) selectedButton.classList.add("incorrect");
+        if (correctButton) correctButton.classList.add("correct");
+        feedback.textContent = `Not quite. ${step.quiz.retryHint || "Review the step carefully and try again."}`;
+        feedback.style.color = "#9f1239";
+        state.currentQuizPassed = false;
+        setStepStatus(state.activeModule, state.activeStep, { quizPassed: false });
+        if (el.nextStepBtn) {
+          el.nextStepBtn.disabled = true;
+          el.nextStepBtn.style.opacity = "0.5";
+          el.nextStepBtn.style.cursor = "not-allowed";
+        }
+      }
+    });
+  }
+}
+
+function addSimLog(logEl, message) {
+  if (!logEl) return;
+  const item = document.createElement("li");
+  item.textContent = message;
+  logEl.appendChild(item);
+}
+
+function attachSimulationHandlers(step) {
+  if (!step.simulation || !el.stepCard) return;
+
+  const output = el.stepCard.querySelector("#simOutputArea");
+  const log = el.stepCard.querySelector("#simLog");
+  const buttons = el.stepCard.querySelectorAll(".sim-action");
+  const simState = {
+    open: false,
+    created: false,
+    named: false,
+    saved: false,
+    wordOpen: false,
+    tabOpen: false,
+    citationInserted: false
+  };
+
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.simAction;
+
+      if (step.simulation.type === "libraryCreate") {
+        if (action === "open-endnote") {
+          simState.open = true;
+          if (output) output.innerHTML = `<span class="sim-pill">EndNote opened</span><p>The EndNote start screen is now visible. You can create or open a library from here.</p>`;
+          addSimLog(log, "Opened EndNote.");
+        }
+
+        if (action === "choose-new-library") {
+          if (!simState.open) {
+            if (output) output.innerHTML = "<p>Please open EndNote first.</p>";
+            return;
+          }
+          simState.created = true;
+          if (output) output.innerHTML = `<span class="sim-pill">Create a New Library</span><p>The <strong>Create a New Library</strong> dialog is ready.</p><div class="sim-file-row"><span>File name</span><strong>MyResearch.enl</strong></div>`;
+          addSimLog(log, "Selected Create a New Library.");
+        }
+
+        if (action === "name-library") {
+          if (!simState.created) {
+            if (output) output.innerHTML = "<p>Choose <strong>Create a New Library</strong> first.</p>";
+            return;
+          }
+          simState.named = true;
+          if (output) output.innerHTML = `<span class="sim-pill">Library named</span><div class="sim-file-row"><span>Library file</span><strong>MyResearch.enl</strong></div><div class="sim-file-row"><span>Location</span><strong>Documents/EndNote Practice</strong></div>`;
+          addSimLog(log, "Named the library MyResearch.enl.");
+        }
+
+        if (action === "save-library") {
+          if (!simState.named) {
+            if (output) output.innerHTML = "<p>Name the library before saving it.</p>";
+            return;
+          }
+          simState.saved = true;
+          if (output) output.innerHTML = `<span class="sim-pill">Library saved</span><div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>MyResearch.enl</span></div><div class="sim-content"><div class="sim-ref-row"><span>Library status</span><strong>Ready for references</strong></div><div class="sim-ref-row"><span>Groups</span><strong>My Groups</strong></div></div></div>`;
+          addSimLog(log, "Saved the library and opened it.");
+          setStepStatus(state.activeModule, state.activeStep, { simulationCompleted: true });
+        }
+      }
+
+      if (step.simulation.type === "wordCitation") {
+        if (action === "open-word") {
+          simState.wordOpen = true;
+          if (output) output.innerHTML = `<div class="sim-doc-preview">This is a research sentence waiting for a citation.</div>`;
+          addSimLog(log, "Opened Word.");
+        }
+
+        if (action === "open-endnote-tab") {
+          if (!simState.wordOpen) {
+            if (output) output.innerHTML = "<p>Open Word first.</p>";
+            return;
+          }
+          simState.tabOpen = true;
+          if (output) output.innerHTML = `<span class="sim-pill">EndNote tab active</span><div class="sim-doc-preview">This is a research sentence waiting for a citation.</div><p style="margin-top:12px;"><strong>EndNote tools available:</strong> Insert Citation, Style, Update Citations and Bibliography.</p>`;
+          addSimLog(log, "Opened the EndNote tab in Word.");
+        }
+
+        if (action === "insert-citation") {
+          if (!simState.tabOpen) {
+            if (output) output.innerHTML = "<p>Open the EndNote tab first.</p>";
+            return;
+          }
+          simState.citationInserted = true;
+          if (output) output.innerHTML = `<div class="sim-doc-preview">This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.</div>`;
+          addSimLog(log, "Inserted the citation (Smith, 2020).");
+        }
+
+        if (action === "show-bibliography") {
+          if (!simState.citationInserted) {
+            if (output) output.innerHTML = "<p>Insert a citation before generating the bibliography preview.</p>";
+            return;
+          }
+          if (output) output.innerHTML = `<div class="sim-doc-preview">This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.<div class="sim-bibliography"><strong>References</strong><p>Smith, J. (2020). <em>Introduction to Research Writing</em>. Academic Press.</p></div></div>`;
+          addSimLog(log, "Displayed the bibliography preview.");
+          setStepStatus(state.activeModule, state.activeStep, { simulationCompleted: true });
+        }
+      }
+    });
   });
 }
 
 function showScreen(screenName) {
   [el.welcomeScreen, el.moduleOverview, el.trainingScreen, el.completionScreen].forEach(screen => {
+    if (!screen) return;
     screen.classList.add("hidden");
     screen.classList.remove("active-screen");
   });
@@ -467,6 +711,7 @@ function showScreen(screenName) {
     completion: el.completionScreen
   }[screenName];
 
+  if (!target) return;
   target.classList.remove("hidden");
   target.classList.add("active-screen");
 }
@@ -483,6 +728,9 @@ function renderAll() {
 }
 
 function advanceStep() {
+  const currentStep = modules[state.activeModule].steps[state.activeStep];
+  if (currentStep.quiz && !state.currentQuizPassed) return;
+
   const module = modules[state.activeModule];
   const isLastStep = state.activeStep === module.steps.length - 1;
 
@@ -517,39 +765,55 @@ function resumeTutorial() {
 }
 
 function resetProgress() {
-  localStorage.removeItem("endnote2025TrainingProgress");
+  localStorage.removeItem(storageKey);
   state.progress = {};
   state.activeModule = 0;
   state.activeStep = 0;
+  state.currentQuizPassed = false;
   showScreen("welcome");
   renderAll();
 }
 
-document.getElementById("startTutorialBtn").addEventListener("click", () => {
-  state.activeModule = 0;
-  state.activeStep = 0;
-  showTraining();
-  renderAll();
-});
-
-document.getElementById("viewModulesBtn").addEventListener("click", () => showScreen("overview"));
-document.getElementById("beginFromOverviewBtn").addEventListener("click", () => {
-  state.activeModule = 0;
-  state.activeStep = 0;
-  showTraining();
-  renderAll();
-});
-document.getElementById("restartTutorialBtn").addEventListener("click", resetProgress);
-document.getElementById("reviewModulesBtn").addEventListener("click", () => showScreen("overview"));
-el.prevStepBtn.addEventListener("click", () => {
-  if (state.activeStep > 0) {
-    state.activeStep -= 1;
-    renderAll();
+function bindEvents() {
+  if (el.startTutorialBtn) {
+    el.startTutorialBtn.addEventListener("click", () => {
+      state.activeModule = 0;
+      state.activeStep = 0;
+      showTraining();
+      renderAll();
+    });
   }
-});
-el.nextStepBtn.addEventListener("click", advanceStep);
-el.resetProgressBtn.addEventListener("click", resetProgress);
-el.jumpToCurrentBtn.addEventListener("click", resumeTutorial);
 
+  if (el.viewModulesBtn) {
+    el.viewModulesBtn.addEventListener("click", () => showScreen("overview"));
+  }
+
+  if (el.beginFromOverviewBtn) {
+    el.beginFromOverviewBtn.addEventListener("click", () => {
+      state.activeModule = 0;
+      state.activeStep = 0;
+      showTraining();
+      renderAll();
+    });
+  }
+
+  if (el.restartTutorialBtn) el.restartTutorialBtn.addEventListener("click", resetProgress);
+  if (el.reviewModulesBtn) el.reviewModulesBtn.addEventListener("click", () => showScreen("overview"));
+
+  if (el.prevStepBtn) {
+    el.prevStepBtn.addEventListener("click", () => {
+      if (state.activeStep > 0) {
+        state.activeStep -= 1;
+        renderAll();
+      }
+    });
+  }
+
+  if (el.nextStepBtn) el.nextStepBtn.addEventListener("click", advanceStep);
+  if (el.resetProgressBtn) el.resetProgressBtn.addEventListener("click", resetProgress);
+  if (el.jumpToCurrentBtn) el.jumpToCurrentBtn.addEventListener("click", resumeTutorial);
+}
+
+bindEvents();
 renderAll();
 showScreen("welcome");
