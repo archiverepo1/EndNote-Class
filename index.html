@@ -8,6 +8,474 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* === INLINE GUIDANCE STYLES === */
+    .quiz-lock-note {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #fff6e5;
+      color: #8a5a00;
+      font-size: 0.95rem;
+      border: 1px solid #f3d28d;
+    }
+    .simulation-box {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid #e3e8f2;
+      border-radius: 18px;
+      background: #f8fbff;
+      position: relative;
+    }
+    .simulation-box h4 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+    .simulation-box p {
+      margin: 0 0 12px;
+    }
+    .sim-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .sim-output {
+      border: 1px solid #d8e1ee;
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 110px;
+      position: relative;
+      overflow: hidden;
+    }
+    .sim-log {
+      margin-top: 12px;
+      padding-left: 18px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .sim-log li + li {
+      margin-top: 6px;
+    }
+    .sim-log-entry {
+      padding: 4px 0;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    .sim-log-entry.status-success { color: #166534; }
+    .sim-log-entry.status-info { color: #1e40af; }
+    .sim-log-entry.status-warning { color: #92400e; }
+    
+    .sim-pill {
+      display: inline-block;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef3fb;
+      color: #29405f;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .sim-pill.status-info { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .sim-pill.status-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .sim-pill.status-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    
+    .sim-window {
+      border: 1px solid #cad6e5;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(20, 35, 70, 0.06);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .sim-window-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #f2f5fa;
+      border-bottom: 1px solid #dde5f0;
+      font-size: 0.92rem;
+      color: #475569;
+    }
+    .sim-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #c23;
+      opacity: 0.5;
+    }
+    .sim-dot.red { background: #ef4444; }
+    .sim-dot.yellow { background: #f59e0b; }
+    .sim-dot.green { background: #22c55e; }
+    
+    .sim-content {
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+    .sim-file-row,
+    .sim-ref-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f7f9fc;
+      border: 1px solid #e5ebf3;
+      margin-top: 10px;
+      align-items: center;
+    }
+    .sim-doc-preview {
+      padding: 16px;
+      border-radius: 16px;
+      background: #fcfdff;
+      border: 1px solid #e2e8f0;
+      line-height: 1.7;
+      transition: all 0.3s ease;
+    }
+    .sim-inline-citation {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      font-weight: 700;
+    }
+    .sim-bibliography {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    /* === VISUAL GUIDANCE SYSTEM === */
+    .sim-guidance {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin: 10px 0;
+      animation: pulse-guide 2s ease-in-out infinite;
+      max-width: fit-content;
+    }
+    @keyframes pulse-guide {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+    }
+    .sim-guidance-arrow {
+      font-size: 1.4rem;
+      animation: bounce-arrow 1s ease infinite;
+      display: inline-block;
+    }
+    @keyframes bounce-arrow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    
+    /* Spotlight effect for next actionable element */
+    .next-target {
+      position: relative;
+      z-index: 10;
+      box-shadow: 
+        0 0 0 3px rgba(102, 126, 234, 0.3),
+        0 0 20px rgba(102, 126, 234, 0.5) !important;
+      animation: glow-pulse 1.5s ease-in-out infinite;
+      transform: scale(1.02);
+      transition: all 0.2s ease;
+      cursor: pointer !important;
+    }
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3), 0 0 20px rgba(102, 126, 234, 0.5); }
+      50% { box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.1), 0 0 30px rgba(102, 126, 234, 0.8); }
+    }
+    
+    /* Completed button styling */
+    .sim-action.correct {
+      background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+      color: white !important;
+      border-color: #16a34a !important;
+      cursor: default;
+    }
+    .sim-action.correct::after {
+      content: "✓";
+      margin-left: 6px;
+      font-weight: bold;
+    }
+    
+    /* Spotlight overlay */
+    .sim-spotlight-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+    }
+    .sim-window.spotlight-active .sim-spotlight-overlay {
+      opacity: 1;
+    }
+    .sim-window.spotlight-active .next-target {
+      position: relative;
+      z-index: 20;
+      box-shadow: 0 0 0 9999px rgba(255, 255, 255, 0.92) !important;
+    }
+    
+    /* Simulation UI Components */
+    .sim-start-screen,
+    .sim-library-view,
+    .sim-dialog {
+      padding: 8px;
+    }
+    .sim-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .sim-options {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .sim-option {
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: #f1f5f9;
+      border: 2px solid transparent;
+      text-align: left;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .sim-option.highlighted {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-color: #667eea;
+      cursor: pointer;
+    }
+    .sim-option.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .sim-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 600;
+    }
+    .sim-body {
+      padding: 16px;
+    }
+    .sim-welcome h4 {
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+    .sim-action-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .sim-large-btn {
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sim-large-btn:hover:not(.disabled) {
+      border-color: #667eea;
+      background: #f8fafc;
+      transform: translateY(-2px);
+    }
+    .sim-large-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .sim-dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #f1f5f9;
+      border-bottom: 1px solid #e2e8f0;
+      border-radius: 12px 12px 0 0;
+    }
+    .sim-dialog-header h4 {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .sim-close {
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .sim-close:hover { opacity: 1; }
+    
+    .sim-dialog-body {
+      padding: 16px;
+    }
+    .sim-form-group {
+      margin-bottom: 14px;
+    }
+    .sim-form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    .sim-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .sim-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .sim-path {
+      padding: 10px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .sim-dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      border-radius: 0 0 12px 12px;
+    }
+    
+    .sim-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .sim-main-area {
+      padding: 16px;
+      min-height: 200px;
+    }
+    .sim-empty-state {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--muted);
+    }
+    .sim-empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+    .sim-sidebar {
+      padding: 12px;
+      background: #f8fafc;
+      border-left: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+    }
+    .sim-group-list strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .sim-group-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sim-group-list li {
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .sim-group-list li:hover,
+    .sim-group-list li.active {
+      background: #e2e8f0;
+      font-weight: 500;
+    }
+    
+    .sim-instruction {
+      padding: 10px 14px;
+      background: #f0f9ff;
+      border-left: 4px solid #0ea5e9;
+      border-radius: 0 8px 8px 0;
+      margin: 10px 0;
+      font-size: 0.95rem;
+    }
+    .sim-instruction.success {
+      background: #f0fdf4;
+      border-left-color: #22c55e;
+      color: #166534;
+    }
+    
+    /* Tooltip */
+    .sim-tooltip {
+      position: absolute;
+      background: #1e293b;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      z-index: 100;
+      max-width: 220px;
+      pointer-events: none;
+      animation: fadeIn 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Screen reader only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    /* Confetti animation */
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -45,7 +513,9 @@
       </nav>
 
       <div class="support-links card">
-        <div class="card-head"><span>Official support</span></div>
+        <div class="card-head">
+          <span>Official support</span>
+        </div>
         <a href="https://support.clarivate.com/Endnote/s/" target="_blank" rel="noopener">Clarivate EndNote Support</a>
         <a href="https://support.clarivate.com/Endnote/s/article/EndNote-2025-Help-Guide-and-Quick-Reference-Guide" target="_blank" rel="noopener">EndNote 2025 Help Guide</a>
         <a href="https://support.clarivate.com/Endnote/s/training" target="_blank" rel="noopener">Official Training</a>
@@ -63,11 +533,11 @@
             and sharing or backing up a library.
           </p>
           <div class="hero-tags">
-            <span>Beginner friendly</span>
-            <span>Practice tasks</span>
-            <span>Mini quizzes</span>
-            <span>Saved progress</span>
-            <span>Interactive demos</span>
+            <span>✨ Visual guidance</span>
+            <span>🎯 Interactive demos</span>
+            <span>📝 Practice tasks</span>
+            <span>💾 Saved progress</span>
+            <span>♿ Accessible</span>
           </div>
           <div class="hero-actions">
             <button id="startTutorialBtn" class="btn primary">Start training</button>
@@ -75,10 +545,22 @@
           </div>
         </div>
         <div class="hero-panel">
-          <div class="mini-stat"><span>Format</span><strong>Guided screens</strong></div>
-          <div class="mini-stat"><span>Audience</span><strong>Students, researchers, staff</strong></div>
-          <div class="mini-stat"><span>Estimated time</span><strong>25–35 minutes</strong></div>
-          <div class="mini-stat"><span>Outcome</span><strong>Confident EndNote basics</strong></div>
+          <div class="mini-stat">
+            <span>Format</span>
+            <strong>Guided simulations</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Audience</span>
+            <strong>Students, researchers, staff</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Estimated time</span>
+            <strong>25–35 minutes</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Outcome</span>
+            <strong>Confident EndNote basics</strong>
+          </div>
         </div>
       </section>
 
@@ -118,16 +600,27 @@
 
             <aside class="lesson-sidebar">
               <div class="card compact">
-                <div class="card-head"><span>Module progress</span><strong id="moduleProgressLabel">Step 1</strong></div>
-                <div class="progress-track slim"><div class="progress-fill" id="moduleProgressFill"></div></div>
+                <div class="card-head">
+                  <span>Module progress</span>
+                  <strong id="moduleProgressLabel">Step 1</strong>
+                </div>
+                <div class="progress-track slim">
+                  <div class="progress-fill" id="moduleProgressFill"></div>
+                </div>
                 <p id="moduleProgressText" class="helper"></p>
               </div>
+
               <div class="card compact">
-                <div class="card-head"><span>Practice task</span></div>
+                <div class="card-head">
+                  <span>Practice task</span>
+                </div>
                 <p id="practiceTask"></p>
               </div>
+
               <div class="card compact">
-                <div class="card-head"><span>Key takeaway</span></div>
+                <div class="card-head">
+                  <span>Key takeaway</span>
+                </div>
                 <p id="keyTakeaway"></p>
               </div>
             </aside>
@@ -136,9 +629,9 @@
       </section>
 
       <section id="completionScreen" class="card screen hidden">
-        <p class="eyebrow">Completed</p>
+        <p class="eyebrow">🎉 Completed</p>
         <h2>You finished the EndNote 2025 basics tutorial</h2>
-        <p>Great. You now have a structured beginner pathway that can be expanded later.</p>
+        <p>Great work! You now have a structured beginner pathway with hands-on practice.</p>
         <div class="completion-actions">
           <button id="restartTutorialBtn" class="btn primary">Restart tutorial</button>
           <button id="reviewModulesBtn" class="btn secondary">Review modules</button>
@@ -146,6 +639,9 @@
       </section>
     </main>
   </div>
+
+  <div id="ariaAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  
   <script src="script.js"></script>
 </body>
 </html>
