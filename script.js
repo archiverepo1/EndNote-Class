@@ -1,5 +1,5 @@
 // === ENDNOTE 2025 TRAINING SYSTEM ===
-// Enhanced with visual guidance, interactive simulations, and accessibility
+// Enhanced with ClickVisualizer for realistic app interaction guidance
 
 const storageKey = "endnote2025TrainingProgress";
 
@@ -297,118 +297,291 @@ const el = {
   ariaAnnouncer: document.getElementById("ariaAnnouncer")
 };
 
-// === PERSISTENCE ===
-function saveProgress() {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(state.progress));
-  } catch (e) {
-    console.warn("Could not save progress:", e);
+// ============================================
+// === CLICK VISUALIZER SYSTEM ===
+// ============================================
+class ClickVisualizer {
+  constructor(container) {
+    this.container = container;
+    this.spotlight = null;
+    this.cursor = null;
+    this.arrow = null;
+    this.ripples = [];
+    this.activeDemo = false;
+    this.init();
   }
-}
 
-function getModuleKey(moduleIndex) { return `module_${moduleIndex}`; }
-function getStepKey(moduleIndex, stepIndex) { return `module_${moduleIndex}_step_${stepIndex}`; }
+  init() {
+    if (!this.container) return;
+    
+    // Create visualization elements if they don't exist
+    if (!this.container.querySelector('#click-spotlight')) {
+      this.spotlight = document.createElement('div');
+      this.spotlight.id = 'click-spotlight';
+      this.spotlight.className = 'click-spotlight';
+      this.container.appendChild(this.spotlight);
+    } else {
+      this.spotlight = this.container.querySelector('#click-spotlight');
+    }
 
-function isModuleComplete(moduleIndex) {
-  return Boolean(state.progress[getModuleKey(moduleIndex)]?.completed);
-}
+    if (!this.container.querySelector('#click-cursor')) {
+      this.cursor = document.createElement('div');
+      this.cursor.id = 'click-cursor';
+      this.cursor.className = 'click-cursor';
+      this.container.appendChild(this.cursor);
+    } else {
+      this.cursor = this.container.querySelector('#click-cursor');
+    }
 
-function setModuleComplete(moduleIndex) {
-  const key = getModuleKey(moduleIndex);
-  state.progress[key] = { ...(state.progress[key] || {}), completed: true };
-  saveProgress();
-}
+    if (!this.container.querySelector('#click-arrow')) {
+      this.arrow = document.createElement('div');
+      this.arrow.id = 'click-arrow';
+      this.arrow.className = 'click-arrow';
+      this.arrow.style.display = 'none';
+      this.container.appendChild(this.arrow);
+    } else {
+      this.arrow = this.container.querySelector('#click-arrow');
+    }
+  }
 
-function setStepStatus(moduleIndex, stepIndex, patch) {
-  const key = getStepKey(moduleIndex, stepIndex);
-  state.progress[key] = { ...(state.progress[key] || {}), ...patch };
-  saveProgress();
-}
-
-function setLastLocation(moduleIndex, stepIndex) {
-  state.progress.lastLocation = { moduleIndex, stepIndex };
-  saveProgress();
-}
-
-function getCompletedCount() {
-  return modules.filter((_, index) => isModuleComplete(index)).length;
-}
-
-// === PROGRESS UI ===
-function updateOverallProgress() {
-  const completed = getCompletedCount();
-  const total = modules.length;
-  const percent = Math.round((completed / total) * 100);
-
-  if (el.progressPercent) el.progressPercent.textContent = `${percent}%`;
-  if (el.progressFill) el.progressFill.style.width = `${percent}%`;
-  if (el.progressText) el.progressText.textContent = `${completed} of ${total} modules completed`;
-}
-
-function renderSidebarModules() {
-  if (!el.moduleList) return;
-  el.moduleList.innerHTML = "";
-
-  modules.forEach((module, index) => {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = `module-item ${index === state.activeModule ? "active" : ""} ${isModuleComplete(index) ? "complete" : ""}`;
-    item.innerHTML = `
-      <strong>Module ${module.id}: ${module.title}</strong>
-      <small>${module.description}</small>
-    `;
-    item.addEventListener("click", () => {
-      state.activeModule = index;
-      state.activeStep = 0;
-      showTraining();
-      renderAll();
-      announce(`Navigated to Module ${module.id}: ${module.title}`);
-    });
-    el.moduleList.appendChild(item);
-  });
-}
-
-function renderOverview() {
-  if (!el.overviewGrid) return;
-  el.overviewGrid.innerHTML = "";
-
-  modules.forEach((module, index) => {
-    const card = document.createElement("article");
-    card.className = `overview-card ${isModuleComplete(index) ? "complete" : ""}`;
-    card.setAttribute("role", "button");
-    card.setAttribute("tabindex", "0");
-    card.innerHTML = `
-      <p class="eyebrow">Module ${module.id}</p>
-      <h3>${module.title}</h3>
-      <p>${module.description}</p>
-    `;
-    const navigate = () => {
-      state.activeModule = index;
-      state.activeStep = 0;
-      showTraining();
-      renderAll();
-      announce(`Starting Module ${module.id}: ${module.title}`);
+  // Get element position relative to container
+  getElementPosition(element) {
+    if (!element || !this.container) return null;
+    
+    const rect = element.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
+    
+    return {
+      x: rect.left + rect.width/2 - containerRect.left + this.container.scrollLeft,
+      y: rect.top + rect.height/2 - containerRect.top + this.container.scrollTop,
+      width: rect.width,
+      height: rect.height,
+      left: rect.left - containerRect.left + this.container.scrollLeft,
+      top: rect.top - containerRect.top + this.container.scrollTop
     };
-    card.addEventListener("click", navigate);
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        navigate();
-      }
-    });
-    el.overviewGrid.appendChild(card);
-  });
-}
+  }
 
-// === ACCESSIBILITY ===
-function announce(message) {
-  if (el.ariaAnnouncer) {
-    el.ariaAnnouncer.textContent = "";
-    setTimeout(() => { el.ariaAnnouncer.textContent = message; }, 100);
+  // Show cursor at element position
+  showCursorAt(element, animate = true) {
+    if (!this.cursor || !element) return Promise.resolve();
+    
+    const pos = this.getElementPosition(element);
+    if (!pos) return Promise.resolve();
+    
+    if (animate) {
+      this.cursor.style.transition = 'left 0.4s ease, top 0.4s ease';
+    } else {
+      this.cursor.style.transition = 'none';
+    }
+    
+    this.cursor.style.left = `${pos.x}px`;
+    this.cursor.style.top = `${pos.y}px`;
+    this.cursor.classList.add('visible');
+    
+    if (animate) {
+      return new Promise(resolve => setTimeout(resolve, 400));
+    }
+    return Promise.resolve();
+  }
+
+  hideCursor() {
+    if (this.cursor) {
+      this.cursor.classList.remove('visible');
+    }
+  }
+
+  // Create ripple effect at position
+  createRipple(x, y, color = 'rgba(167, 25, 48, 0.3)') {
+    if (!this.container) return;
+    
+    const ripple = document.createElement('div');
+    ripple.className = 'click-ripple';
+    ripple.style.left = `${x - 10}px`;
+    ripple.style.top = `${y - 10}px`;
+    ripple.style.width = '20px';
+    ripple.style.height = '20px';
+    ripple.style.background = color;
+    
+    this.container.appendChild(ripple);
+    this.ripples.push(ripple);
+    
+    // Cleanup after animation
+    setTimeout(() => {
+      if (ripple.parentNode) {
+        ripple.remove();
+      }
+      this.ripples = this.ripples.filter(r => r !== ripple);
+    }, 600);
+  }
+
+  // Create ripple on element click
+  createRippleOnElement(element, color = 'rgba(167, 25, 48, 0.3)') {
+    const pos = this.getElementPosition(element);
+    if (pos) {
+      this.createRipple(pos.x, pos.y, color);
+    }
+  }
+
+  // Spotlight a target element with dimming effect
+  spotlightElement(element, message = '') {
+    if (!this.spotlight || !element) return;
+    
+    const pos = this.getElementPosition(element);
+    if (!pos) return;
+    
+    // Show spotlight with cutout effect
+    this.spotlight.style.cssText = `
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      z-index: 90;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+      mask: radial-gradient(
+        circle ${Math.max(pos.width, pos.height)/2 + 10}px at ${pos.x}px ${pos.y}px,
+        transparent 0%,
+        transparent ${Math.max(pos.width, pos.height)/2}px,
+        black ${Math.max(pos.width, pos.height)/2 + 1}px
+      );
+      -webkit-mask: radial-gradient(
+        circle ${Math.max(pos.width, pos.height)/2 + 10}px at ${pos.x}px ${pos.y}px,
+        transparent 0%,
+        transparent ${Math.max(pos.width, pos.height)/2}px,
+        black ${Math.max(pos.width, pos.height)/2 + 1}px
+      );
+    `;
+    
+    // Show guidance arrow if message provided
+    if (message && this.arrow) {
+      this.arrow.innerHTML = `<span>👆 ${message}</span>`;
+      this.arrow.style.left = `${pos.x}px`;
+      this.arrow.style.top = `${pos.y - 50}px`;
+      this.arrow.style.transform = 'translateX(-50%)';
+      this.arrow.style.display = 'flex';
+      this.arrow.classList.add('visible');
+    }
+  }
+
+  clearSpotlight() {
+    if (this.spotlight) {
+      this.spotlight.style.opacity = '0';
+      setTimeout(() => {
+        this.spotlight.style.cssText = '';
+      }, 300);
+    }
+    if (this.arrow) {
+      this.arrow.style.display = 'none';
+      this.arrow.classList.remove('visible');
+    }
+  }
+
+  // Show tooltip near element
+  showTooltip(element, text, duration = 3000) {
+    if (!element || !text) return;
+    
+    let tooltip = element.querySelector('.click-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'click-tooltip';
+      element.style.position = 'relative';
+      element.appendChild(tooltip);
+    }
+    
+    tooltip.textContent = text;
+    tooltip.classList.add('visible');
+    
+    // Auto-hide
+    setTimeout(() => {
+      tooltip.classList.remove('visible');
+    }, duration);
+  }
+
+  // Animate click sequence for demo mode
+  async demoClickSequence(elements, messages = [], clickDelay = 1500) {
+    if (this.activeDemo) return;
+    this.activeDemo = true;
+    
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      const message = messages[i] || '';
+      
+      if (!element) continue;
+      
+      // Guide user with spotlight and cursor
+      this.spotlightElement(element, message);
+      await this.showCursorAt(element, true);
+      
+      // Wait for user attention
+      await new Promise(resolve => setTimeout(resolve, clickDelay));
+      
+      // Simulate click with ripple
+      const pos = this.getElementPosition(element);
+      if (pos) {
+        this.createRipple(pos.x, pos.y, 'rgba(34, 197, 94, 0.4)');
+        element.click?.();
+      }
+      
+      // Wait before next step
+      await new Promise(resolve => setTimeout(resolve, 800));
+      this.clearSpotlight();
+      this.hideCursor();
+    }
+    
+    this.activeDemo = false;
+  }
+
+  // Add demo button to simulation
+  addDemoButton(simulationInstance) {
+    if (!this.container) return;
+    
+    // Remove existing demo button if present
+    const existingBtn = this.container.querySelector('.demo-toggle-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    const demoBtn = document.createElement('button');
+    demoBtn.className = 'btn ghost demo-toggle-btn';
+    demoBtn.innerHTML = '🎬 Watch Demo';
+    demoBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;font-size:12px;padding:6px 12px;';
+    
+    const simBox = this.container.closest('.simulation-box');
+    if (simBox) {
+      simBox.style.position = 'relative';
+      simBox.appendChild(demoBtn);
+    }
+    
+    demoBtn.addEventListener('click', async () => {
+      demoBtn.disabled = true;
+      demoBtn.textContent = '▶ Playing...';
+      
+      const sequence = simulationInstance.getDemoSequence?.();
+      if (sequence) {
+        const elements = sequence.map(s => 
+          this.container.querySelector(`[data-sim-action="${s.action}"]`)
+        ).filter(Boolean);
+        const messages = sequence.map(s => s.hint || '');
+        
+        await this.demoClickSequence(elements, messages);
+      }
+      
+      demoBtn.disabled = false;
+      demoBtn.textContent = '🎬 Watch Demo';
+    });
+  }
+
+  // Cleanup
+  destroy() {
+    this.ripples.forEach(ripple => ripple.remove());
+    this.ripples = [];
+    this.spotlight?.remove();
+    this.cursor?.remove();
+    this.arrow?.remove();
   }
 }
 
-// === SIMULATION ENGINE ===
+// ============================================
+// === SIMULATION ENGINE BASE CLASS ===
+// ============================================
 class SimulationEngine {
   constructor(container, config = {}) {
     this.container = container;
@@ -416,6 +589,7 @@ class SimulationEngine {
     this.state = {};
     this.hintsShown = new Set();
     this.onComplete = config.onComplete || (() => {});
+    this.visualizer = null;
     this.init();
   }
 
@@ -424,8 +598,22 @@ class SimulationEngine {
     this.log = this.container?.querySelector("#simLog");
     this.instruction = this.container?.querySelector("#simInstruction");
     this.buttons = [...(this.container?.querySelectorAll(".sim-action") || [])];
+    
+    // Initialize click visualizer
+    const outputContainer = this.container?.querySelector(".sim-output");
+    if (outputContainer) {
+      this.visualizer = new ClickVisualizer(outputContainer);
+    }
+    
     this.setupEventListeners();
     this.renderInitialState();
+    
+    // Add demo button after a short delay
+    setTimeout(() => {
+      if (this.visualizer) {
+        this.visualizer.addDemoButton(this);
+      }
+    }, 1000);
   }
 
   highlight(element, type = 'next') {
@@ -447,14 +635,9 @@ class SimulationEngine {
   }
 
   createGuidanceArrow(target, message) {
-    if (!target || !message) return null;
-    const arrow = document.createElement('div');
-    arrow.className = 'sim-guidance';
-    arrow.innerHTML = `<span class="sim-guidance-arrow">↓</span><span>${message}</span>`;
-    arrow.setAttribute('role', 'status');
-    target.parentElement?.insertBefore(arrow, target);
-    setTimeout(() => arrow?.remove(), 6000);
-    return arrow;
+    if (!target || !message || !this.visualizer) return null;
+    // Visualizer handles this now
+    return null;
   }
 
   addLogEntry(message, type = 'info') {
@@ -484,9 +667,17 @@ class SimulationEngine {
         this.output.innerHTML = html;
         this.output.style.opacity = '1';
         this.output.style.transform = 'scale(1)';
+        
+        // Re-initialize visualizer for new content
+        if (this.visualizer) {
+          this.visualizer.init();
+        }
       }, 150);
     } else {
       this.output.innerHTML = html;
+      if (this.visualizer) {
+        this.visualizer.init();
+      }
     }
   }
 
@@ -501,10 +692,17 @@ class SimulationEngine {
       button.classList.add('next-target');
       this.highlight(button, 'next');
       button.focus?.();
+      
+      // Show visual guidance
+      if (this.visualizer && message) {
+        setTimeout(() => {
+          this.visualizer.spotlightElement(button, message.replace(/<[^>]*>/g, ''));
+          this.visualizer.showCursorAt(button);
+        }, 300);
+      }
     }
     if (this.instruction && message) {
       this.instruction.innerHTML = message;
-      this.createGuidanceArrow(button, message.replace(/<[^>]*>/g, ''));
     }
   }
 
@@ -514,6 +712,12 @@ class SimulationEngine {
     button.classList.remove('next-target');
     button.disabled = true;
     this.clearHighlight(button);
+    
+    // Create success ripple
+    if (this.visualizer) {
+      this.visualizer.createRippleOnElement(button, 'rgba(34, 197, 94, 0.4)');
+    }
+    
     button.style.transform = 'scale(1.03)';
     setTimeout(() => {
       button.style.transition = 'transform 0.2s ease';
@@ -523,17 +727,9 @@ class SimulationEngine {
 
   showTooltip(element, text) {
     if (!element || !text || this.hintsShown.has(element.dataset.hint)) return;
-    const tooltip = document.createElement('div');
-    tooltip.className = 'sim-tooltip';
-    tooltip.textContent = text;
-    const rect = element.getBoundingClientRect();
-    tooltip.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 240)}px`;
-    tooltip.style.top = `${rect.top + window.scrollY - 45}px`;
-    document.body.appendChild(tooltip);
-    setTimeout(() => {
-      tooltip.style.opacity = '0';
-      setTimeout(() => tooltip.remove(), 200);
-    }, 3500);
+    if (this.visualizer) {
+      this.visualizer.showTooltip(element, text);
+    }
     this.hintsShown.add(element.dataset.hint);
   }
 
@@ -541,16 +737,20 @@ class SimulationEngine {
     this.buttons.forEach(button => {
       button.addEventListener('click', (e) => {
         const action = button.dataset.simAction;
-        if (action) this.handleAction(action, button);
+        if (action && !button.disabled) {
+          this.handleAction(action, button);
+        }
       });
       button.addEventListener('mouseenter', () => {
-        if (button.dataset.hint) this.showTooltip(button, button.dataset.hint);
+        if (button.dataset.hint && !button.disabled) {
+          this.showTooltip(button, button.dataset.hint);
+        }
       });
       button.setAttribute('tabindex', button.disabled ? '-1' : '0');
       button.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          button.click();
+          if (!button.disabled) button.click();
         }
       });
     });
@@ -562,6 +762,11 @@ class SimulationEngine {
 
   renderInitialState() {
     // Override in subclasses
+  }
+
+  getDemoSequence() {
+    // Override in subclasses - return array of {action, hint}
+    return [];
   }
 
   triggerCelebration() {
@@ -591,22 +796,72 @@ class SimulationEngine {
       document.head.appendChild(style);
     }
   }
+
+  destroy() {
+    if (this.visualizer) {
+      this.visualizer.destroy();
+    }
+  }
 }
 
+// ============================================
 // === LIBRARY CREATE SIMULATION ===
+// ============================================
 class LibraryCreateSimulation extends SimulationEngine {
+  getDemoSequence() {
+    return [
+      { action: 'open-endnote', hint: 'Launch EndNote' },
+      { action: 'choose-new-library', hint: 'Create new library' },
+      { action: 'name-library', hint: 'Confirm library name' },
+      { action: 'save-library', hint: 'Save and open' }
+    ];
+  }
+
   renderInitialState() {
     this.updatePreview(`
-      <div class="sim-start-screen">
-        <div class="sim-logo">📚 EndNote 2025</div>
-        <p class="helper">Welcome! Choose an option to begin:</p>
-        <div class="sim-options">
-          <div class="sim-option disabled">📂 Open an Existing Library</div>
-          <div class="sim-option highlighted">✨ Create a New Library</div>
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
+          </div>
+          <span class="app-icon" style="background:var(--primary)">EN</span>
+          <span class="app-name">EndNote 2025</span>
+        </div>
+        
+        <div class="app-content" style="text-align:center;padding:40px 20px;">
+          <div style="font-size:3rem;margin-bottom:16px;">📚</div>
+          <h3 style="margin:0 0 8px;font-size:1.3rem;">Welcome to EndNote</h3>
+          <p style="color:var(--muted);margin:0 0 24px;font-size:0.95rem;">Choose an option to begin</p>
+          
+          <div style="display:grid;gap:12px;max-width:450px;margin:0 auto;">
+            <button class="sim-action ribbon-btn" 
+                    data-sim-action="choose-new-library"
+                    style="width:100%;justify-content:start;gap:12px;background:#e8f4fd;border-color:#7eb4e7;padding:14px 18px;">
+              <span class="btn-icon" style="background:var(--primary);color:white;font-size:16px;">✨</span>
+              <div style="text-align:left;">
+                <strong style="display:block;color:var(--text);">Create a New Library</strong>
+                <small style="color:var(--muted);font-weight:400;">Start fresh for your project</small>
+              </div>
+            </button>
+            
+            <button class="sim-action ribbon-btn disabled" 
+                    data-sim-action="open-existing"
+                    style="width:100%;justify-content:start;gap:12px;opacity:0.5;padding:14px 18px;">
+              <span class="btn-icon" style="font-size:16px;">📁</span>
+              <div style="text-align:left;">
+                <strong style="display:block;color:var(--text);">Open an Existing Library</strong>
+                <small style="color:var(--muted);font-weight:400;">Continue working</small>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     `, { animate: true });
-    this.addLogEntry("EndNote launched. Ready to create your library.", 'info');
+    
+    this.addLogEntry("EndNote 2025 launched", 'info');
+    
     const btn = this.buttons.find(b => b.dataset.simAction === 'choose-new-library');
     this.enableNext(btn, 'Click <strong>Create a New Library</strong> to begin');
   }
@@ -624,73 +879,108 @@ class LibraryCreateSimulation extends SimulationEngine {
   stepOpenEndNote(button) {
     this.markComplete(button);
     this.addLogEntry("✓ EndNote application opened", 'success');
+    
     this.updatePreview(`
-      <div class="sim-window-content">
-        <div class="sim-header">
-          <span class="sim-dot red"></span>
-          <span class="sim-dot yellow"></span>
-          <span class="sim-dot green"></span>
-          <strong>EndNote 2025</strong>
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
+          </div>
+          <span class="app-icon" style="background:var(--primary)">EN</span>
+          <span class="app-name">EndNote 2025</span>
         </div>
-        <div class="sim-body">
-          <div class="sim-welcome">
-            <h4>👋 Welcome to EndNote</h4>
-            <p>What would you like to do?</p>
-            <div class="sim-action-grid">
-              <button class="sim-large-btn next-target" data-sim-action="choose-new-library">
-                ✨ Create New Library
-              </button>
-              <button class="sim-large-btn disabled">📁 Open Existing Library</button>
-            </div>
+        
+        <div class="app-content" style="text-align:center;padding:40px 20px;">
+          <div style="font-size:3rem;margin-bottom:16px;">👋</div>
+          <h3 style="margin:0 0 8px;">Welcome to EndNote</h3>
+          <p style="color:var(--muted);margin:0 0 24px;">What would you like to do?</p>
+          
+          <div style="display:grid;gap:12px;max-width:450px;margin:0 auto;">
+            <button class="sim-action ribbon-btn" 
+                    data-sim-action="choose-new-library"
+                    style="width:100%;justify-content:start;gap:12px;background:#e8f4fd;border-color:#7eb4e7;padding:14px 18px;">
+              <span class="btn-icon" style="background:var(--primary);color:white;font-size:16px;">✨</span>
+              <div style="text-align:left;">
+                <strong style="display:block;">Create a New Library</strong>
+                <small style="color:var(--muted);font-weight:400;">Start fresh</small>
+              </div>
+            </button>
+            
+            <button class="sim-action ribbon-btn disabled" 
+                    style="width:100%;justify-content:start;gap:12px;opacity:0.5;padding:14px 18px;">
+              <span class="btn-icon" style="font-size:16px;">📁</span>
+              <div style="text-align:left;">
+                <strong style="display:block;">Open an Existing Library</strong>
+                <small style="color:var(--muted);font-weight:400;">Continue working</small>
+              </div>
+            </button>
           </div>
         </div>
       </div>
     `, { animate: true });
+    
     const btn = this.buttons.find(b => b.dataset.simAction === 'choose-new-library');
-    this.enableNext(btn, 'Great! Now click <strong>Create New Library</strong>');
+    this.enableNext(btn, 'Great! Now click <strong>Create a New Library</strong>');
   }
 
   stepCreateLibrary(button) {
     this.markComplete(button);
     this.addLogEntry("✓ 'Create New Library' selected", 'success');
+    
     this.updatePreview(`
-      <div class="sim-dialog">
-        <div class="sim-dialog-header">
-          <h4>📝 New Library</h4>
-          <span class="sim-close">✕</span>
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
+          </div>
+          <span class="app-icon" style="background:var(--primary)">EN</span>
+          <span class="app-name">New Library</span>
         </div>
-        <div class="sim-dialog-body">
-          <div class="sim-form-group">
-            <label>Library Name</label>
-            <input type="text" class="sim-input next-target" 
-                   value="MyResearch.enl" 
+        
+        <div style="padding:24px;">
+          <div style="margin-bottom:20px;">
+            <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--text);">File name:</label>
+            <input type="text" class="sim-input" 
+                   value="MyResearch.enl"
                    data-sim-action="name-library"
-                   placeholder="Enter library name"
-                   readonly>
-            <small class="helper">💡 Tip: Use a descriptive name for your project</small>
+                   readonly
+                   style="width:100%;padding:12px;border:2px solid #7eb4e7;border-radius:6px;font-size:14px;background:#f8fafc;">
+            <small class="helper" style="display:block;margin-top:6px;color:var(--muted);">💡 Tip: Use a descriptive name for your project</small>
           </div>
-          <div class="sim-form-group">
-            <label>Save Location</label>
-            <div class="sim-path">📁 Documents/EndNote Libraries/</div>
+          
+          <div style="margin-bottom:24px;">
+            <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--text);">Save in:</label>
+            <div style="padding:12px;background:#f8fafc;border:1px solid #e0e4e9;border-radius:6px;font-family:monospace;font-size:13px;color:var(--muted);">
+              📁 Documents/EndNote Libraries/
+            </div>
           </div>
-        </div>
-        <div class="sim-dialog-footer">
-          <button class="btn ghost">Cancel</button>
-          <button class="btn primary next-target" data-sim-action="save-library">
-            Create Library ✨
-          </button>
+          
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button class="btn ghost" style="padding:10px 20px;">Cancel</button>
+            <button class="btn primary sim-action" 
+                    data-sim-action="save-library"
+                    style="background:var(--primary);color:white;padding:10px 24px;border:none;border-radius:6px;font-weight:600;">
+              Create Library
+            </button>
+          </div>
         </div>
       </div>
     `, { animate: true });
-    const btn = this.buttons.find(b => b.dataset.simAction === 'name-library');
-    this.enableNext(btn, 'The name is set. Click <strong>Name Library</strong> to confirm');
+    
+    const btn = this.buttons.find(b => b.dataset.simAction === 'save-library');
+    this.enableNext(btn, 'Click <strong>Create Library</strong> to save');
   }
 
   stepNameLibrary(button) {
     this.markComplete(button);
     this.addLogEntry("✓ Library named: MyResearch.enl", 'success');
+    
     const saveBtn = this.buttons.find(b => b.dataset.simAction === 'save-library');
-    this.enableNext(saveBtn, 'Almost done! Click <strong>Save Library</strong> to finish');
+    this.enableNext(saveBtn, 'Almost done! Click <strong>Create Library</strong>');
   }
 
   stepSaveLibrary(button) {
@@ -699,27 +989,55 @@ class LibraryCreateSimulation extends SimulationEngine {
     this.triggerCelebration();
     
     this.updatePreview(`
-      <div class="sim-library-view">
-        <div class="sim-toolbar">
-          <span class="sim-pill status-success">✅ Library Ready</span>
-          <span class="sim-pill">0 References</span>
-          <span class="sim-pill">My Groups</span>
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
+          </div>
+          <span class="app-icon" style="background:var(--primary)">EN</span>
+          <span class="app-name">MyResearch.enl - EndNote 2025</span>
         </div>
-        <div class="sim-main-area">
-          <div class="sim-empty-state">
-            <div class="sim-empty-icon">📭</div>
-            <p>Your library is ready for references!</p>
-            <button class="btn secondary">+ Add Reference</button>
+        
+        <div class="app-ribbon">
+          <span class="ribbon-tab active">References</span>
+          <span class="ribbon-tab">Groups</span>
+          <span class="ribbon-tab">Tools</span>
+          
+          <div class="ribbon-group">
+            <button class="ribbon-btn" style="opacity:0.5;">
+              <span class="btn-icon">➕</span>
+              <span>New</span>
+            </button>
+            <button class="ribbon-btn" style="opacity:0.5;">
+              <span class="btn-icon">📥</span>
+              <span>Import</span>
+            </button>
           </div>
         </div>
-        <div class="sim-sidebar">
-          <div class="sim-group-list">
-            <strong>Groups</strong>
-            <ul>
-              <li class="active">All References</li>
-              <li>Unfiled</li>
-              <li>Trash</li>
-            </ul>
+        
+        <div class="endnote-library" style="display:grid;grid-template-columns:180px 1fr;min-height:250px;">
+          <div class="en-sidebar" style="background:#f8f9fa;padding:12px 8px;border-right:1px solid #e0e4e9;">
+            <div class="en-sidebar-item active" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:4px;background:#e8f4fd;color:var(--primary);">
+              <span class="icon">📋</span> All References
+            </div>
+            <div class="en-sidebar-item" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:4px;margin-top:4px;">
+              <span class="icon">📁</span> My Groups
+            </div>
+            <div class="en-sidebar-item" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:4px;margin-top:4px;">
+              <span class="icon">🗑️</span> Trash
+            </div>
+          </div>
+          
+          <div class="en-main" style="background:white;padding:24px;text-align:center;">
+            <div style="font-size:3rem;margin-bottom:12px;opacity:0.5;">📭</div>
+            <h4 style="margin:0 0 8px;color:var(--text);">Library Ready!</h4>
+            <p style="color:var(--muted);margin:0 0 16px;">Your library is ready for references</p>
+            <div style="display:inline-flex;gap:8px;">
+              <span class="sim-pill status-success">✅ 0 References</span>
+              <span class="sim-pill">📁 My Groups</span>
+            </div>
           </div>
         </div>
       </div>
@@ -729,27 +1047,59 @@ class LibraryCreateSimulation extends SimulationEngine {
       this.instruction.innerHTML = '🎉 <strong>Perfect!</strong> You\'ve created your first EndNote library. Review the preview, then continue.';
       this.instruction.className = 'sim-instruction success';
     }
+    
+    if (this.visualizer) {
+      this.visualizer.clearSpotlight();
+      this.visualizer.hideCursor();
+    }
+    
     this.onComplete();
   }
 }
 
+// ============================================
 // === WORD CITATION SIMULATION ===
+// ============================================
 class WordCitationSimulation extends SimulationEngine {
+  getDemoSequence() {
+    return [
+      { action: 'open-word', hint: 'Open Word document' },
+      { action: 'open-endnote-tab', hint: 'Activate EndNote tab' },
+      { action: 'insert-citation', hint: 'Insert citation' },
+      { action: 'show-bibliography', hint: 'Generate bibliography' }
+    ];
+  }
+
   renderInitialState() {
     this.updatePreview(`
-      <div class="sim-window">
-        <div class="sim-window-bar">
-          <span class="sim-dot red"></span><span class="sim-dot yellow"></span><span class="sim-dot green"></span>
-          <span>research-paper.docx — Word</span>
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
+          </div>
+          <span class="app-icon" style="background:#2b579a">W</span>
+          <span class="app-name">research-paper.docx - Word</span>
         </div>
-        <div class="sim-content">
-          <div class="sim-doc-preview">
-            This is a research sentence waiting for a citation<span class="sim-inline-citation" style="opacity:0.5">[?]</span>.
+        
+        <div class="app-ribbon">
+          <span class="ribbon-tab">Home</span>
+          <span class="ribbon-tab">Insert</span>
+          <span class="ribbon-tab">EndNote 2025</span>
+        </div>
+        
+        <div class="app-content" style="background:#f3f3f3;padding:24px;">
+          <div class="word-page" style="max-width:600px;margin:0 auto;background:white;border:1px solid #d0d4d9;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.1);padding:50px 60px;font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;">
+            <p style="margin:0 0 16px;">This is a research sentence waiting for a citation<span style="opacity:0.4">[?]</span>.</p>
+            <p style="color:var(--muted);font-size:10pt;margin-top:40px;">Click <strong>Open Word</strong> to begin the simulation.</p>
           </div>
         </div>
       </div>
     `, { animate: true });
-    this.addLogEntry("Word document opened. Ready to insert citation.", 'info');
+    
+    this.addLogEntry("Word document ready", 'info');
+    
     const btn = this.buttons.find(b => b.dataset.simAction === 'open-word');
     this.enableNext(btn, 'Click <strong>Open Word</strong> to begin');
   }
@@ -766,25 +1116,34 @@ class WordCitationSimulation extends SimulationEngine {
 
   stepOpenWord(button) {
     this.markComplete(button);
-    this.addLogEntry("✓ Word document ready", 'success');
+    this.addLogEntry("✓ Word document opened", 'success');
+    
     this.updatePreview(`
-      <div class="sim-window">
-        <div class="sim-window-bar">
-          <span class="sim-dot red"></span><span class="sim-dot yellow"></span><span class="sim-dot green"></span>
-          <span>research-paper.docx — Word</span>
-        </div>
-        <div class="sim-content">
-          <div class="sim-pill">📄 Document ready</div>
-          <div class="sim-doc-preview">
-            This is a research sentence waiting for a citation<span class="sim-inline-citation" style="opacity:0.5">[?]</span>.
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
           </div>
-          <div class="sim-file-row">
-            <span>Ribbon</span>
-            <strong>Home | Insert | EndNote 2025 ▼</strong>
+          <span class="app-icon" style="background:#2b579a">W</span>
+          <span class="app-name">research-paper.docx - Word</span>
+        </div>
+        
+        <div class="app-ribbon">
+          <span class="ribbon-tab">Home</span>
+          <span class="ribbon-tab">Insert</span>
+          <span class="ribbon-tab" style="opacity:0.6;">EndNote 2025 ▼</span>
+        </div>
+        
+        <div class="app-content" style="background:#f3f3f3;padding:24px;">
+          <div class="word-page" style="max-width:600px;margin:0 auto;background:white;border:1px solid #d0d4d9;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.1);padding:50px 60px;font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;">
+            <p style="margin:0 0 16px;">This is a research sentence waiting for a citation<span style="opacity:0.4">[?]</span>.</p>
           </div>
         </div>
       </div>
     `, { animate: true });
+    
     const btn = this.buttons.find(b => b.dataset.simAction === 'open-endnote-tab');
     this.enableNext(btn, 'Now click <strong>Open EndNote Tab</strong>');
   }
@@ -792,50 +1151,93 @@ class WordCitationSimulation extends SimulationEngine {
   stepOpenTab(button) {
     this.markComplete(button);
     this.addLogEntry("✓ EndNote tab activated", 'success');
+    
     this.updatePreview(`
-      <div class="sim-window">
-        <div class="sim-window-bar">
-          <span class="sim-dot red"></span><span class="sim-dot yellow"></span><span class="sim-dot green"></span>
-          <span>research-paper.docx — Word</span>
-        </div>
-        <div class="sim-content">
-          <div class="sim-pill status-info">🔗 EndNote 2025 tab active</div>
-          <div class="sim-doc-preview">
-            This is a research sentence waiting for a citation<span class="sim-inline-citation" style="opacity:0.5">[?]</span>.
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
           </div>
-          <div class="sim-toolbar" style="margin-top:12px;background:#f1f5f9;border-radius:10px;">
-            <button class="btn secondary" style="font-size:0.85rem;padding:6px 12px;">🔍 Insert Citation</button>
-            <button class="btn ghost" style="font-size:0.85rem;padding:6px 12px;">APA 7th ▼</button>
-            <button class="btn ghost" style="font-size:0.85rem;padding:6px 12px;">🔄 Update</button>
+          <span class="app-icon" style="background:#2b579a">W</span>
+          <span class="app-name">research-paper.docx - Word</span>
+        </div>
+        
+        <div class="app-ribbon" style="background:#e8f4fd;border-bottom-color:#7eb4e7;">
+          <span class="ribbon-tab">Home</span>
+          <span class="ribbon-tab">Insert</span>
+          <span class="ribbon-tab active" style="background:white;border-color:#7eb4e7;color:var(--primary);">EndNote 2025</span>
+          
+          <div class="ribbon-group" style="margin-left:16px;">
+            <button class="ribbon-btn" style="opacity:0.6;">
+              <span class="btn-icon">🔍</span>
+              <span>Insert Citation</span>
+            </button>
+            <button class="ribbon-btn" style="opacity:0.6;">
+              <span class="btn-icon">📋</span>
+              <span>Style: APA 7th</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="app-content" style="background:#f3f3f3;padding:24px;">
+          <div class="word-page" style="max-width:600px;margin:0 auto;background:white;border:1px solid #d0d4d9;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.1);padding:50px 60px;font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;">
+            <p style="margin:0 0 16px;">This is a research sentence waiting for a citation<span style="opacity:0.4">[?]</span>.</p>
           </div>
         </div>
       </div>
     `, { animate: true });
+    
     const btn = this.buttons.find(b => b.dataset.simAction === 'insert-citation');
-    this.enableNext(btn, 'Click <strong>Insert Citation</strong>. Watch the sentence change.');
+    this.enableNext(btn, 'Click <strong>Insert Citation</strong>');
   }
 
   stepInsertCitation(button) {
     this.markComplete(button);
     this.addLogEntry("✓ Citation inserted: (Smith, 2020)", 'success');
+    
     this.updatePreview(`
-      <div class="sim-window">
-        <div class="sim-window-bar">
-          <span class="sim-dot red"></span><span class="sim-dot yellow"></span><span class="sim-dot green"></span>
-          <span>research-paper.docx — Word</span>
-        </div>
-        <div class="sim-content">
-          <div class="sim-pill status-success">✓ Citation added</div>
-          <div class="sim-doc-preview">
-            This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
           </div>
-          <div class="sim-file-row" style="background:#f0fdf4;border-color:#86efac;">
-            <span>Status</span>
-            <strong style="color:#166534;">Citation formatted • Bibliography pending</strong>
+          <span class="app-icon" style="background:#2b579a">W</span>
+          <span class="app-name">research-paper.docx - Word</span>
+        </div>
+        
+        <div class="app-ribbon" style="background:#e8f4fd;border-bottom-color:#7eb4e7;">
+          <span class="ribbon-tab">Home</span>
+          <span class="ribbon-tab">Insert</span>
+          <span class="ribbon-tab active" style="background:white;border-color:#7eb4e7;color:var(--primary);">EndNote 2025</span>
+          
+          <div class="ribbon-group" style="margin-left:16px;">
+            <button class="ribbon-btn" style="opacity:0.6;">
+              <span class="btn-icon">🔍</span>
+              <span>Insert Citation</span>
+            </button>
+            <button class="ribbon-btn" style="opacity:0.6;">
+              <span class="btn-icon">📋</span>
+              <span>Style: APA 7th</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="app-content" style="background:#f3f3f3;padding:24px;">
+          <div class="word-page" style="max-width:600px;margin:0 auto;background:white;border:1px solid #d0d4d9;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.1);padding:50px 60px;font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;">
+            <p style="margin:0 0 16px;">This is a research sentence <span style="background:#e8f4fd;padding:2px 6px;border-radius:3px;color:var(--primary);font-weight:600;">(Smith, 2020)</span> that now includes an in-text citation.</p>
+            <div style="margin-top:24px;padding:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;">
+              <span style="color:#166534;font-weight:600;">✓ Citation formatted</span>
+              <span style="color:var(--muted);margin-left:12px;">Bibliography pending</span>
+            </div>
           </div>
         </div>
       </div>
     `, { animate: true });
+    
     const btn = this.buttons.find(b => b.dataset.simAction === 'show-bibliography');
     this.enableNext(btn, 'Finally, click <strong>Show Bibliography</strong>');
   }
@@ -843,21 +1245,38 @@ class WordCitationSimulation extends SimulationEngine {
   stepShowBibliography(button) {
     this.markComplete(button);
     this.addLogEntry("✓ Bibliography generated", 'success');
+    
     this.updatePreview(`
-      <div class="sim-window">
-        <div class="sim-window-bar">
-          <span class="sim-dot red"></span><span class="sim-dot yellow"></span><span class="sim-dot green"></span>
-          <span>research-paper.docx — Word</span>
+      <div class="app-mockup">
+        <div class="app-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
+          </div>
+          <span class="app-icon" style="background:#2b579a">W</span>
+          <span class="app-name">research-paper.docx - Word</span>
         </div>
-        <div class="sim-content">
-          <div class="sim-pill status-success">📚 Bibliography complete</div>
-          <div class="sim-doc-preview">
-            <p>This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.</p>
-            <div class="sim-bibliography">
-              <strong style="color:var(--primary);">References</strong>
-              <p style="margin:8px 0 0;padding-left:20px;text-indent:-20px;">
+        
+        <div class="app-ribbon" style="background:#e8f4fd;border-bottom-color:#7eb4e7;">
+          <span class="ribbon-tab">Home</span>
+          <span class="ribbon-tab">Insert</span>
+          <span class="ribbon-tab active" style="background:white;border-color:#7eb4e7;color:var(--primary);">EndNote 2025</span>
+        </div>
+        
+        <div class="app-content" style="background:#f3f3f3;padding:24px;">
+          <div class="word-page" style="max-width:600px;margin:0 auto;background:white;border:1px solid #d0d4d9;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.1);padding:50px 60px;font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;">
+            <p style="margin:0 0 16px;">This is a research sentence <span style="background:#e8f4fd;padding:2px 6px;border-radius:3px;color:var(--primary);font-weight:600;">(Smith, 2020)</span> that now includes an in-text citation.</p>
+            
+            <div style="margin-top:48px;padding-top:24px;border-top:2px solid var(--primary);">
+              <p style="font-weight:700;color:var(--primary);margin:0 0 12px;">References</p>
+              <p style="margin:0;padding-left:24px;text-indent:-24px;">
                 Smith, J. (2020). <em>Introduction to Research Writing</em>. Academic Press.
               </p>
+            </div>
+            
+            <div style="margin-top:24px;padding:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;text-align:center;">
+              <span style="color:#166534;font-weight:600;">🎉 Bibliography Complete!</span>
             </div>
           </div>
         </div>
@@ -865,15 +1284,24 @@ class WordCitationSimulation extends SimulationEngine {
     `, { animate: true });
     
     if (this.instruction) {
-      this.instruction.innerHTML = '🎉 <strong>Excellent!</strong> You\'ve inserted a citation and generated a bibliography. Review the result, then continue.';
+      this.instruction.innerHTML = '🎉 <strong>Excellent!</strong> You\'ve inserted a citation and generated a bibliography.';
       this.instruction.className = 'sim-instruction success';
     }
+    
     this.triggerCelebration();
+    
+    if (this.visualizer) {
+      this.visualizer.clearSpotlight();
+      this.visualizer.hideCursor();
+    }
+    
     this.onComplete();
   }
 }
 
+// ============================================
 // === SIMULATION MARKUP GENERATOR ===
+// ============================================
 function getSimulationMarkup(simulation) {
   if (!simulation) return "";
 
@@ -881,7 +1309,7 @@ function getSimulationMarkup(simulation) {
     return `
       <div class="simulation-box">
         <h4>✨ Interactive demo: create a library</h4>
-        <p>Click through the same order a real beginner would follow in EndNote. Follow the glowing button!</p>
+        <p>Click through the same order a real beginner would follow in EndNote. Follow the glowing button and cursor!</p>
         <div class="sim-instruction" id="simInstruction" role="status">Start here: click <strong>Open EndNote</strong>.</div>
         <div class="sim-toolbar">
           <button type="button" class="btn secondary sim-action" data-sim-action="open-endnote" data-hint="Launch the EndNote application">Open EndNote</button>
@@ -890,7 +1318,6 @@ function getSimulationMarkup(simulation) {
           <button type="button" class="btn secondary sim-action" data-sim-action="save-library" data-hint="Save and open your new library">Save Library</button>
         </div>
         <div class="sim-output">
-          <div class="sim-spotlight-overlay"></div>
           <div class="sim-window">
             <div class="sim-window-bar">
               <span class="sim-dot red"></span><span class="sim-dot yellow"></span><span class="sim-dot green"></span>
@@ -910,7 +1337,7 @@ function getSimulationMarkup(simulation) {
     return `
       <div class="simulation-box">
         <h4>✨ Interactive demo: insert a citation in Word</h4>
-        <p>Practice the Cite While You Write workflow. Follow the highlighted button!</p>
+        <p>Practice the Cite While You Write workflow. Follow the highlighted button and cursor!</p>
         <div class="sim-instruction" id="simInstruction" role="status">Start here: click <strong>Open Word</strong>.</div>
         <div class="sim-toolbar">
           <button type="button" class="btn secondary sim-action" data-sim-action="open-word" data-hint="Open Microsoft Word">Open Word</button>
@@ -919,7 +1346,6 @@ function getSimulationMarkup(simulation) {
           <button type="button" class="btn secondary sim-action" data-sim-action="show-bibliography" data-hint="Generate the references list">Show Bibliography</button>
         </div>
         <div class="sim-output">
-          <div class="sim-spotlight-overlay"></div>
           <div class="sim-window">
             <div class="sim-window-bar">
               <span class="sim-dot red"></span><span class="sim-dot yellow"></span><span class="sim-dot green"></span>
@@ -937,7 +1363,9 @@ function getSimulationMarkup(simulation) {
   return "";
 }
 
+// ============================================
 // === STEP RENDERING ===
+// ============================================
 function renderStep() {
   const module = modules[state.activeModule];
   const step = module?.steps[state.activeStep];
@@ -1039,7 +1467,9 @@ function renderStep() {
   announce(`Step ${state.activeStep + 1}: ${step.title}`);
 }
 
+// ============================================
 // === QUIZ HANDLERS ===
+// ============================================
 function attachQuizHandlers(step) {
   if (!step.quiz || !el.stepCard) return;
 
@@ -1063,7 +1493,6 @@ function attachQuizHandlers(step) {
       }
     });
     
-    // Keyboard support
     btn.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -1127,7 +1556,9 @@ function attachQuizHandlers(step) {
   }
 }
 
+// ============================================
 // === SIMULATION HANDLERS ===
+// ============================================
 function attachSimulationHandlers(step) {
   if (!step.simulation || !el.stepCard) return;
 
@@ -1155,7 +1586,9 @@ function attachSimulationHandlers(step) {
   }
 }
 
+// ============================================
 // === SCREEN MANAGEMENT ===
+// ============================================
 function showScreen(screenName) {
   const screens = {
     welcome: el.welcomeScreen,
@@ -1174,7 +1607,6 @@ function showScreen(screenName) {
   if (target) {
     target.classList.remove("hidden");
     target.classList.add("active-screen");
-    // Focus first interactive element for accessibility
     const focusable = target.querySelector('button:not(:disabled), [tabindex="0"]');
     focusable?.focus?.();
   }
@@ -1184,7 +1616,9 @@ function showTraining() {
   showScreen("training");
 }
 
+// ============================================
 // === RENDER ALL ===
+// ============================================
 function renderAll() {
   updateOverallProgress();
   renderSidebarModules();
@@ -1192,7 +1626,9 @@ function renderAll() {
   renderStep();
 }
 
+// ============================================
 // === NAVIGATION ===
+// ============================================
 function advanceStep() {
   const currentStep = modules[state.activeModule]?.steps[state.activeStep];
   if (currentStep?.quiz && !state.currentQuizPassed) {
@@ -1209,12 +1645,10 @@ function advanceStep() {
     return;
   }
 
-  // Module complete
   setModuleComplete(state.activeModule);
   announce(`Module ${module.id} completed!`);
 
   if (state.activeModule === modules.length - 1) {
-    // All modules complete
     updateOverallProgress();
     renderSidebarModules();
     showScreen("completion");
@@ -1222,14 +1656,12 @@ function advanceStep() {
     return;
   }
 
-  // Next module
   state.activeModule += 1;
   state.activeStep = 0;
   renderAll();
 }
 
 function triggerCelebration() {
-  // Global celebration for tutorial completion
   const colors = ['#a71930', '#667eea', '#22c55e', '#f59e0b'];
   for (let i = 0; i < 40; i++) {
     const confetti = document.createElement('div');
@@ -1276,9 +1708,127 @@ function resetProgress() {
   announce("Progress reset. Welcome back!");
 }
 
+// ============================================
+// === PERSISTENCE ===
+// ============================================
+function saveProgress() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(state.progress));
+  } catch (e) {
+    console.warn("Could not save progress:", e);
+  }
+}
+
+function getModuleKey(moduleIndex) { return `module_${moduleIndex}`; }
+function getStepKey(moduleIndex, stepIndex) { return `module_${moduleIndex}_step_${stepIndex}`; }
+
+function isModuleComplete(moduleIndex) {
+  return Boolean(state.progress[getModuleKey(moduleIndex)]?.completed);
+}
+
+function setModuleComplete(moduleIndex) {
+  const key = getModuleKey(moduleIndex);
+  state.progress[key] = { ...(state.progress[key] || {}), completed: true };
+  saveProgress();
+}
+
+function setStepStatus(moduleIndex, stepIndex, patch) {
+  const key = getStepKey(moduleIndex, stepIndex);
+  state.progress[key] = { ...(state.progress[key] || {}), ...patch };
+  saveProgress();
+}
+
+function setLastLocation(moduleIndex, stepIndex) {
+  state.progress.lastLocation = { moduleIndex, stepIndex };
+  saveProgress();
+}
+
+function getCompletedCount() {
+  return modules.filter((_, index) => isModuleComplete(index)).length;
+}
+
+// ============================================
+// === PROGRESS UI ===
+// ============================================
+function updateOverallProgress() {
+  const completed = getCompletedCount();
+  const total = modules.length;
+  const percent = Math.round((completed / total) * 100);
+
+  if (el.progressPercent) el.progressPercent.textContent = `${percent}%`;
+  if (el.progressFill) el.progressFill.style.width = `${percent}%`;
+  if (el.progressText) el.progressText.textContent = `${completed} of ${total} modules completed`;
+}
+
+function renderSidebarModules() {
+  if (!el.moduleList) return;
+  el.moduleList.innerHTML = "";
+
+  modules.forEach((module, index) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = `module-item ${index === state.activeModule ? "active" : ""} ${isModuleComplete(index) ? "complete" : ""}`;
+    item.innerHTML = `
+      <strong>Module ${module.id}: ${module.title}</strong>
+      <small>${module.description}</small>
+    `;
+    item.addEventListener("click", () => {
+      state.activeModule = index;
+      state.activeStep = 0;
+      showTraining();
+      renderAll();
+      announce(`Navigated to Module ${module.id}: ${module.title}`);
+    });
+    el.moduleList.appendChild(item);
+  });
+}
+
+function renderOverview() {
+  if (!el.overviewGrid) return;
+  el.overviewGrid.innerHTML = "";
+
+  modules.forEach((module, index) => {
+    const card = document.createElement("article");
+    card.className = `overview-card ${isModuleComplete(index) ? "complete" : ""}`;
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    card.innerHTML = `
+      <p class="eyebrow">Module ${module.id}</p>
+      <h3>${module.title}</h3>
+      <p>${module.description}</p>
+    `;
+    const navigate = () => {
+      state.activeModule = index;
+      state.activeStep = 0;
+      showTraining();
+      renderAll();
+      announce(`Starting Module ${module.id}: ${module.title}`);
+    };
+    card.addEventListener("click", navigate);
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        navigate();
+      }
+    });
+    el.overviewGrid.appendChild(card);
+  });
+}
+
+// ============================================
+// === ACCESSIBILITY ===
+// ============================================
+function announce(message) {
+  if (el.ariaAnnouncer) {
+    el.ariaAnnouncer.textContent = "";
+    setTimeout(() => { el.ariaAnnouncer.textContent = message; }, 100);
+  }
+}
+
+// ============================================
 // === EVENT BINDING ===
+// ============================================
 function bindEvents() {
-  // Welcome screen
   el.startTutorialBtn?.addEventListener("click", () => {
     state.activeModule = 0;
     state.activeStep = 0;
@@ -1292,7 +1842,6 @@ function bindEvents() {
     announce("Showing module overview");
   });
 
-  // Overview screen
   el.beginFromOverviewBtn?.addEventListener("click", () => {
     state.activeModule = 0;
     state.activeStep = 0;
@@ -1300,11 +1849,9 @@ function bindEvents() {
     renderAll();
   });
 
-  // Completion screen
   el.restartTutorialBtn?.addEventListener("click", resetProgress);
   el.reviewModulesBtn?.addEventListener("click", () => showScreen("overview"));
 
-  // Navigation
   el.prevStepBtn?.addEventListener("click", () => {
     if (state.activeStep > 0) {
       state.activeStep -= 1;
@@ -1317,13 +1864,11 @@ function bindEvents() {
     advanceStep();
   });
 
-  // Sidebar
   el.resetProgressBtn?.addEventListener("click", resetProgress);
   el.jumpToCurrentBtn?.addEventListener("click", resumeTutorial);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    // Arrow navigation in training
     if (el.trainingScreen?.classList.contains('active-screen')) {
       if (e.key === 'ArrowRight' && !e.altKey && !e.ctrlKey) {
         e.preventDefault();
@@ -1335,26 +1880,25 @@ function bindEvents() {
         renderAll();
       }
     }
-    // Escape to go back
     if (e.key === 'Escape' && !el.trainingScreen?.classList.contains('active-screen')) {
       showScreen('welcome');
     }
   });
 }
 
+// ============================================
 // === INITIALIZATION ===
+// ============================================
 function init() {
   bindEvents();
   renderAll();
   showScreen("welcome");
   
-  // Announce page load for screen readers
   setTimeout(() => {
     announce("EndNote 2025 Guided Training loaded. Welcome!");
   }, 500);
 }
 
-// Start when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
