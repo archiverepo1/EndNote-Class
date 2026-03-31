@@ -1,965 +1,116 @@
-const storageKey = "endnote2025TrainingProgress";
+const storageKey="endnote2025TrainingProgress";
+const modules=[
+{id:1,title:"Getting started with EndNote",description:"Understand what EndNote is and create your first library.",practice:"Open EndNote 2025 and create a new library called MyResearch.enl.",takeaway:"A library is the main file where your references, groups, and attachments are managed.",steps:[
+{title:"What EndNote is used for",body:"EndNote helps a researcher collect references, organise them, store PDFs, and insert citations into a Word document while automatically building a bibliography.",listType:"ul",list:["Store journal articles, books, and reports in one place","Attach or link PDFs to references","Insert citations in Microsoft Word","Change referencing styles quickly"],callout:"Think of EndNote as your personal reference library and citation assistant."},
+{title:"Create your first library",body:"A new user should begin by creating one library for a project, course, or thesis. This is usually the first practical action in EndNote training.",listType:"ol",list:["Open EndNote 2025","Choose Create a New Library","Name the file MyResearch.enl","Save it in an easy-to-find folder"],callout:"Avoid scattering references across many tiny libraries unless you have a clear reason.",simulation:{type:"libraryCreate"}},
+{title:"Quick check",body:"Why is creating a library important before collecting references?",quiz:{question:"Choose the best answer:",correctIndex:1,options:["Because EndNote cannot open PDFs without it","Because the library is the main container for references and organisation","Because Word requires it before typing","Because citation styles are stored outside EndNote"],feedback:"Correct. The library is the central place where references and related files are managed.",retryHint:"Review the earlier explanation of what a library does, then try again."}}
+]},
+{id:2,title:"Adding references",description:"Learn the beginner ways to add material into a library.",practice:"Add one reference manually and then try importing one reference from an online database export file.",takeaway:"A user can add references manually, import them from databases, or capture metadata from PDFs.",steps:[
+{title:"Manual entry",body:"Manual entry is useful when a source is not easy to export or when you need to correct incomplete information.",listType:"ol",list:["Go to References > New Reference","Choose the correct reference type, such as Journal Article or Book","Enter author, title, year, journal, volume, issue, and pages","Save the record"],callout:"Choosing the correct reference type matters because fields change depending on the source."},
+{title:"Import from a database",body:"Many databases allow you to export directly to EndNote or to an RIS file that EndNote can import.",listType:"ul",list:["Search in a database such as Scopus, Web of Science, or EBSCOhost","Use the export or save option","Choose EndNote or RIS format where available","Import the file into your EndNote library"],callout:"Always check the imported reference for missing or messy metadata."},
+{title:"Quick check",body:"What should a beginner always do after importing a reference?",quiz:{question:"Choose the best answer:",correctIndex:2,options:["Delete the original export file immediately","Move the reference into Trash to refresh it","Review the metadata for accuracy and completeness","Change the citation style first"],feedback:"Correct. Imported data often needs checking, especially author names, capitalization, and missing fields.",retryHint:"Think about the most common issue after import: metadata quality."}}
+]},
+{id:3,title:"Organising your library",description:"Use groups, attachments, and searching to keep a library manageable.",practice:"Create a group called Literature Review and move at least two references into it.",takeaway:"Good organisation saves time when writing and retrieving sources later.",steps:[
+{title:"Create groups",body:"Groups help users separate sources by chapter, topic, assignment, or methodology.",listType:"ol",list:["Right-click My Groups","Choose Create Group","Name the group clearly, such as Literature Review","Drag references into the group"],callout:"Groups do not duplicate references; they help organise the same library."},
+{title:"Attach PDFs and notes",body:"Attaching a PDF or adding notes makes EndNote more useful as a research workspace.",listType:"ul",list:["Open a reference record","Attach the PDF file if you have it","Add research notes or keywords","Use keywords consistently for easier searching"],callout:"A consistent naming and keyword strategy becomes very helpful in larger projects."},
+{title:"Quick check",body:"What is the main value of groups in EndNote?",quiz:{question:"Choose the best answer:",correctIndex:0,options:["They organise references without needing separate libraries","They permanently lock references from editing","They change a journal article into a book","They automatically publish your bibliography"],feedback:"Correct. Groups are an organisational tool inside a single library.",retryHint:"Go back to the explanation about how groups behave inside one library."}}
+]},
+{id:4,title:"Citing while you write",description:"Understand the basic EndNote and Word connection.",practice:"Open Word, place the cursor in a sentence, and insert one citation using EndNote CWYW.",takeaway:"CWYW lets users insert citations and generate bibliographies directly in Word.",steps:[
+{title:"Open Word with the EndNote tab",body:"When EndNote is correctly installed, Word should include the EndNote tools used for Cite While You Write.",listType:"ul",list:["Open Microsoft Word","Locate the EndNote tab or ribbon tools","Place the cursor where the citation should appear","Use Insert Citation to search and add a source"],callout:"If the tab is missing, that becomes a troubleshooting step, not a writing step.",simulation:{type:"wordCitation"}},
+{title:"Change citation style",body:"A user can switch between styles such as APA, Harvard, or Vancouver without rebuilding the references manually.",listType:"ol",list:["Find the Style dropdown in the EndNote tools in Word","Select the style required by your department or journal","Allow Word and EndNote to reformat the in-text citations","Check the bibliography for correct output"],callout:"Always verify the final output, because software support does not replace academic checking."},
+{title:"Quick check",body:"What is the biggest advantage of Cite While You Write?",quiz:{question:"Choose the best answer:",correctIndex:3,options:["It removes the need for any proofreading","It converts all PDFs into Word files","It uploads the document to a publisher automatically","It inserts citations and builds the bibliography as you write"],feedback:"Correct. CWYW links writing and referencing, saving a lot of manual formatting time.",retryHint:"Look again at the step showing the Word and EndNote connection."}}
+]},
+{id:5,title:"Backup and next steps",description:"Finish with safe library practice and basic confidence checks.",practice:"Create a compressed library backup or copy your library folder to a safe location.",takeaway:"Backing up your EndNote library reduces the risk of losing references and attachments.",steps:[
+{title:"Understand what to back up",body:"An EndNote library usually includes the main library file and its associated data folder. Both matter.",listType:"ul",list:["The .enl file is the main library file","The .Data folder usually holds attachments and related data","Both should be preserved together unless using a compressed library option","Store backups in a secure and easy-to-find location"],callout:"A backup is part of good research practice, not just technical housekeeping."},
+{title:"Where to go next",body:"After the basics, a learner can move into advanced workflows such as synchronisation, duplicate removal, annotations, full-text retrieval, and journal-specific styles.",listType:"ul",list:["Learn how to find duplicates","Explore sync if your environment supports it","Practice editing citation output","Build a department or faculty-specific training path later"],callout:"Tip: As you progress, try applying each step using your own research topic or assignment."},
+{title:"Final quick check",body:"What is the safest beginner habit after building a useful library?",quiz:{question:"Choose the best answer:",correctIndex:1,options:["Delete older copies immediately without checking","Back up the library and its data safely","Rename every citation style","Export every reference as a PDF"],feedback:"Correct. Backups protect work and should be part of a normal routine.",retryHint:"Revisit the backup explanation and think about protecting both references and attachments."}}
+]}];
+const state={activeModule:0,activeStep:0,progress:JSON.parse(localStorage.getItem(storageKey)||"{}"),currentQuizPassed:false};
+const el={welcomeScreen:document.getElementById("welcomeScreen"),moduleOverview:document.getElementById("moduleOverview"),trainingScreen:document.getElementById("trainingScreen"),completionScreen:document.getElementById("completionScreen"),moduleList:document.getElementById("moduleList"),overviewGrid:document.getElementById("overviewGrid"),progressPercent:document.getElementById("progressPercent"),progressFill:document.getElementById("progressFill"),progressText:document.getElementById("progressText"),moduleCounter:document.getElementById("moduleCounter"),stageEyebrow:document.getElementById("stageEyebrow"),stageTitle:document.getElementById("stageTitle"),stageDescription:document.getElementById("stageDescription"),stageStepCount:document.getElementById("stageStepCount"),stageStatus:document.getElementById("stageStatus"),stepCard:document.getElementById("stepCard"),moduleProgressLabel:document.getElementById("moduleProgressLabel"),moduleProgressFill:document.getElementById("moduleProgressFill"),moduleProgressText:document.getElementById("moduleProgressText"),practiceTask:document.getElementById("practiceTask"),keyTakeaway:document.getElementById("keyTakeaway"),prevStepBtn:document.getElementById("prevStepBtn"),nextStepBtn:document.getElementById("nextStepBtn"),resetProgressBtn:document.getElementById("resetProgressBtn"),jumpToCurrentBtn:document.getElementById("jumpToCurrentBtn"),startTutorialBtn:document.getElementById("startTutorialBtn"),viewModulesBtn:document.getElementById("viewModulesBtn"),beginFromOverviewBtn:document.getElementById("beginFromOverviewBtn"),restartTutorialBtn:document.getElementById("restartTutorialBtn"),reviewModulesBtn:document.getElementById("reviewModulesBtn")};
+function saveProgress(){localStorage.setItem(storageKey,JSON.stringify(state.progress))}
+function getModuleKey(moduleIndex){return `module_${moduleIndex}`}
+function getStepKey(moduleIndex,stepIndex){return `module_${moduleIndex}_step_${stepIndex}`}
+function isModuleComplete(moduleIndex){return Boolean(state.progress[getModuleKey(moduleIndex)]?.completed)}
+function setModuleComplete(moduleIndex){const key=getModuleKey(moduleIndex);state.progress[key]={...(state.progress[key]||{}),completed:true};saveProgress()}
+function setStepStatus(moduleIndex,stepIndex,patch){const key=getStepKey(moduleIndex,stepIndex);state.progress[key]={...(state.progress[key]||{}),...patch};saveProgress()}
+function setLastLocation(moduleIndex,stepIndex){state.progress.lastLocation={moduleIndex,stepIndex};saveProgress()}
+function getCompletedCount(){return modules.filter((_,index)=>isModuleComplete(index)).length}
+function updateOverallProgress(){const completed=getCompletedCount();const total=modules.length;const percent=Math.round((completed/total)*100);if(el.progressPercent)el.progressPercent.textContent=`${percent}%`;if(el.progressFill)el.progressFill.style.width=`${percent}%`;if(el.progressText)el.progressText.textContent=`${completed} of ${total} modules completed`}
+function renderSidebarModules(){if(!el.moduleList)return;el.moduleList.innerHTML="";modules.forEach((module,index)=>{const item=document.createElement("button");item.type="button";item.className=`module-item ${index===state.activeModule?"active":""} ${isModuleComplete(index)?"complete":""}`;item.innerHTML=`<strong>Module ${module.id}: ${module.title}</strong><small>${module.description}</small>`;item.addEventListener("click",()=>{state.activeModule=index;state.activeStep=0;showTraining();renderAll()});el.moduleList.appendChild(item)})}
+function renderOverview(){if(!el.overviewGrid)return;el.overviewGrid.innerHTML="";modules.forEach((module,index)=>{const card=document.createElement("article");card.className="overview-card";card.innerHTML=`<p class="eyebrow">Module ${module.id}</p><h3>${module.title}</h3><p>${module.description}</p>`;card.addEventListener("click",()=>{state.activeModule=index;state.activeStep=0;showTraining();renderAll()});el.overviewGrid.appendChild(card)})}
 
-const modules = [
-  {
-    id: 1,
-    title: "Getting started with EndNote",
-    description: "Understand what EndNote is and create your first library.",
-    practice: "Open EndNote 2025 and create a new library called MyResearch.enl.",
-    takeaway: "A library is the main file where your references, groups, and attachments are managed.",
-    steps: [
-      {
-        title: "What EndNote is used for",
-        body: "EndNote helps a researcher collect references, organise them, store PDFs, and insert citations into a Word document while automatically building a bibliography.",
-        listType: "ul",
-        list: [
-          "Store journal articles, books, and reports in one place",
-          "Attach or link PDFs to references",
-          "Insert citations in Microsoft Word",
-          "Change referencing styles quickly"
-        ],
-        callout: "Think of EndNote as your personal reference library and citation assistant."
-      },
-      {
-        title: "Create your first library",
-        body: "A new user should begin by creating one library for a project, course, or thesis. This is usually the first practical action in EndNote training.",
-        listType: "ol",
-        list: [
-          "Open EndNote 2025",
-          "Choose Create a New Library",
-          "Name the file MyResearch.enl",
-          "Save it in an easy-to-find folder"
-        ],
-        callout: "Avoid scattering references across many tiny libraries unless you have a clear reason.",
-        simulation: { type: "libraryCreate" }
-      },
-      {
-        title: "Quick check",
-        body: "Why is creating a library important before collecting references?",
-        quiz: {
-          question: "Choose the best answer:",
-          correctIndex: 1,
-          options: [
-            "Because EndNote cannot open PDFs without it",
-            "Because the library is the main container for references and organisation",
-            "Because Word requires it before typing",
-            "Because citation styles are stored outside EndNote"
-          ],
-          feedback: "Correct. The library is the central place where references and related files are managed.",
-          retryHint: "Review the earlier explanation of what a library does, then try again."
-        }
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: "Adding references",
-    description: "Learn the beginner ways to add material into a library.",
-    practice: "Add one reference manually and then try importing one reference from an online database export file.",
-    takeaway: "A user can add references manually, import them from databases, or capture metadata from PDFs.",
-    steps: [
-      {
-        title: "Manual entry",
-        body: "Manual entry is useful when a source is not easy to export or when you need to correct incomplete information.",
-        listType: "ol",
-        list: [
-          "Go to References > New Reference",
-          "Choose the correct reference type, such as Journal Article or Book",
-          "Enter author, title, year, journal, volume, issue, and pages",
-          "Save the record"
-        ],
-        callout: "Choosing the correct reference type matters because fields change depending on the source."
-      },
-      {
-        title: "Import from a database",
-        body: "Many databases allow you to export directly to EndNote or to an RIS file that EndNote can import.",
-        listType: "ul",
-        list: [
-          "Search in a database such as Scopus, Web of Science, or EBSCOhost",
-          "Use the export or save option",
-          "Choose EndNote or RIS format where available",
-          "Import the file into your EndNote library"
-        ],
-        callout: "Always check the imported reference for missing or messy metadata."
-      },
-      {
-        title: "Quick check",
-        body: "What should a beginner always do after importing a reference?",
-        quiz: {
-          question: "Choose the best answer:",
-          correctIndex: 2,
-          options: [
-            "Delete the original export file immediately",
-            "Move the reference into Trash to refresh it",
-            "Review the metadata for accuracy and completeness",
-            "Change the citation style first"
-          ],
-          feedback: "Correct. Imported data often needs checking, especially author names, capitalization, and missing fields.",
-          retryHint: "Think about the most common issue after import: metadata quality."
-        }
-      }
-    ]
-  },
-  {
-    id: 3,
-    title: "Organising your library",
-    description: "Use groups, attachments, and searching to keep a library manageable.",
-    practice: "Create a group called Literature Review and move at least two references into it.",
-    takeaway: "Good organisation saves time when writing and retrieving sources later.",
-    steps: [
-      {
-        title: "Create groups",
-        body: "Groups help users separate sources by chapter, topic, assignment, or methodology.",
-        listType: "ol",
-        list: [
-          "Right-click My Groups",
-          "Choose Create Group",
-          "Name the group clearly, such as Literature Review",
-          "Drag references into the group"
-        ],
-        callout: "Groups do not duplicate references; they help organise the same library."
-      },
-      {
-        title: "Attach PDFs and notes",
-        body: "Attaching a PDF or adding notes makes EndNote more useful as a research workspace.",
-        listType: "ul",
-        list: [
-          "Open a reference record",
-          "Attach the PDF file if you have it",
-          "Add research notes or keywords",
-          "Use keywords consistently for easier searching"
-        ],
-        callout: "A consistent naming and keyword strategy becomes very helpful in larger projects."
-      },
-      {
-        title: "Quick check",
-        body: "What is the main value of groups in EndNote?",
-        quiz: {
-          question: "Choose the best answer:",
-          correctIndex: 0,
-          options: [
-            "They organise references without needing separate libraries",
-            "They permanently lock references from editing",
-            "They change a journal article into a book",
-            "They automatically publish your bibliography"
-          ],
-          feedback: "Correct. Groups are an organisational tool inside a single library.",
-          retryHint: "Go back to the explanation about how groups behave inside one library."
-        }
-      }
-    ]
-  },
-  {
-    id: 4,
-    title: "Citing while you write",
-    description: "Understand the basic EndNote and Word connection.",
-    practice: "Open Word, place the cursor in a sentence, and insert one citation using EndNote CWYW.",
-    takeaway: "CWYW lets users insert citations and generate bibliographies directly in Word.",
-    steps: [
-      {
-        title: "Open Word with the EndNote tab",
-        body: "When EndNote is correctly installed, Word should include the EndNote tools used for Cite While You Write.",
-        listType: "ul",
-        list: [
-          "Open Microsoft Word",
-          "Locate the EndNote tab or ribbon tools",
-          "Place the cursor where the citation should appear",
-          "Use Insert Citation to search and add a source"
-        ],
-        callout: "If the tab is missing, that becomes a troubleshooting step, not a writing step.",
-        simulation: { type: "wordCitation" }
-      },
-      {
-        title: "Change citation style",
-        body: "A user can switch between styles such as APA, Harvard, or Vancouver without rebuilding the references manually.",
-        listType: "ol",
-        list: [
-          "Find the Style dropdown in the EndNote tools in Word",
-          "Select the style required by your department or journal",
-          "Allow Word and EndNote to reformat the in-text citations",
-          "Check the bibliography for correct output"
-        ],
-        callout: "Always verify the final output, because software support does not replace academic checking."
-      },
-      {
-        title: "Quick check",
-        body: "What is the biggest advantage of Cite While You Write?",
-        quiz: {
-          question: "Choose the best answer:",
-          correctIndex: 3,
-          options: [
-            "It removes the need for any proofreading",
-            "It converts all PDFs into Word files",
-            "It uploads the document to a publisher automatically",
-            "It inserts citations and builds the bibliography as you write"
-          ],
-          feedback: "Correct. CWYW links writing and referencing, saving a lot of manual formatting time.",
-          retryHint: "Look again at the step showing the Word and EndNote connection."
-        }
-      }
-    ]
-  },
-  {
-    id: 5,
-    title: "Backup and next steps",
-    description: "Finish with safe library practice and basic confidence checks.",
-    practice: "Create a compressed library backup or copy your library folder to a safe location.",
-    takeaway: "Backing up your EndNote library reduces the risk of losing references and attachments.",
-    steps: [
-      {
-        title: "Understand what to back up",
-        body: "An EndNote library usually includes the main library file and its associated data folder. Both matter.",
-        listType: "ul",
-        list: [
-          "The .enl file is the main library file",
-          "The .Data folder usually holds attachments and related data",
-          "Both should be preserved together unless using a compressed library option",
-          "Store backups in a secure and easy-to-find location"
-        ],
-        callout: "A backup is part of good research practice, not just technical housekeeping."
-      },
-      {
-        title: "Where to go next",
-        body: "After the basics, a learner can move into advanced workflows such as synchronisation, duplicate removal, annotations, full-text retrieval, and journal-specific styles.",
-        listType: "ul",
-        list: [
-          "Learn how to find duplicates",
-          "Explore sync if your environment supports it",
-          "Practice editing citation output",
-          "Build a department or faculty-specific training path later"
-        ],
-        callout: "Tip: As you progress, try applying each step using your own research topic or assignment."
-      },
-      {
-        title: "Final quick check",
-        body: "What is the safest beginner habit after building a useful library?",
-        quiz: {
-          question: "Choose the best answer:",
-          correctIndex: 1,
-          options: [
-            "Delete older copies immediately without checking",
-            "Back up the library and its data safely",
-            "Rename every citation style",
-            "Export every reference as a PDF"
-          ],
-          feedback: "Correct. Backups protect work and should be part of a normal routine.",
-          retryHint: "Revisit the backup explanation and think about protecting both references and attachments."
-        }
-      }
-    ]
-  }
-];
-
-const state = {
-  activeModule: 0,
-  activeStep: 0,
-  progress: JSON.parse(localStorage.getItem(storageKey) || "{}"),
-  currentQuizPassed: false
-};
-
-const el = {
-  welcomeScreen: document.getElementById("welcomeScreen"),
-  moduleOverview: document.getElementById("moduleOverview"),
-  trainingScreen: document.getElementById("trainingScreen"),
-  completionScreen: document.getElementById("completionScreen"),
-  moduleList: document.getElementById("moduleList"),
-  overviewGrid: document.getElementById("overviewGrid"),
-  progressPercent: document.getElementById("progressPercent"),
-  progressFill: document.getElementById("progressFill"),
-  progressText: document.getElementById("progressText"),
-  moduleCounter: document.getElementById("moduleCounter"),
-  stageEyebrow: document.getElementById("stageEyebrow"),
-  stageTitle: document.getElementById("stageTitle"),
-  stageDescription: document.getElementById("stageDescription"),
-  stageStepCount: document.getElementById("stageStepCount"),
-  stageStatus: document.getElementById("stageStatus"),
-  stepCard: document.getElementById("stepCard"),
-  moduleProgressLabel: document.getElementById("moduleProgressLabel"),
-  moduleProgressFill: document.getElementById("moduleProgressFill"),
-  moduleProgressText: document.getElementById("moduleProgressText"),
-  practiceTask: document.getElementById("practiceTask"),
-  keyTakeaway: document.getElementById("keyTakeaway"),
-  prevStepBtn: document.getElementById("prevStepBtn"),
-  nextStepBtn: document.getElementById("nextStepBtn"),
-  resetProgressBtn: document.getElementById("resetProgressBtn"),
-  jumpToCurrentBtn: document.getElementById("jumpToCurrentBtn"),
-  startTutorialBtn: document.getElementById("startTutorialBtn"),
-  viewModulesBtn: document.getElementById("viewModulesBtn"),
-  beginFromOverviewBtn: document.getElementById("beginFromOverviewBtn"),
-  restartTutorialBtn: document.getElementById("restartTutorialBtn"),
-  reviewModulesBtn: document.getElementById("reviewModulesBtn")
-};
-
-function saveProgress() {
-  localStorage.setItem(storageKey, JSON.stringify(state.progress));
+function getSimulationMarkup(simulation){
+ if(!simulation)return "";
+ if(simulation.type==="libraryCreate"){
+  return `<div class="simulation-box"><h4>Interactive demo: create a library</h4><p>Click through the same order a real beginner would follow in EndNote.</p><div class="sim-instruction" id="simInstruction">Start here: click <strong>Open EndNote</strong>.</div><div class="sim-guidance"><span class="sim-guidance-arrow">↓</span><span>Follow the highlighted button.</span></div><div class="sim-toolbar"><button type="button" class="btn secondary sim-action" data-sim-action="open-endnote">Open EndNote</button><button type="button" class="btn secondary sim-action" data-sim-action="choose-new-library">Create New Library</button><button type="button" class="btn secondary sim-action" data-sim-action="name-library">Name Library</button><button type="button" class="btn secondary sim-action" data-sim-action="save-library">Save Library</button><button type="button" class="btn ghost sim-replay">Replay demo</button></div><div class="sim-output"><div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>EndNote preview</span></div><div class="sim-content" id="simOutputArea"><p>Select <strong>Open EndNote</strong> to begin the walkthrough.</p></div></div><ol class="sim-log" id="simLog"></ol></div></div>`;
+ }
+ if(simulation.type==="wordCitation"){
+  return `<div class="simulation-box"><h4>Interactive demo: insert a citation in Word</h4><p>Use the demo controls to mimic a simple Cite While You Write workflow.</p><div class="sim-instruction" id="simInstruction">Start here: click <strong>Open Word</strong>.</div><div class="sim-guidance"><span class="sim-guidance-arrow">↓</span><span>Follow the highlighted button.</span></div><div class="sim-toolbar"><button type="button" class="btn secondary sim-action" data-sim-action="open-word">Open Word</button><button type="button" class="btn secondary sim-action" data-sim-action="open-endnote-tab">Open EndNote Tab</button><button type="button" class="btn secondary sim-action" data-sim-action="insert-citation">Insert Citation</button><button type="button" class="btn secondary sim-action" data-sim-action="show-bibliography">Show Bibliography</button><button type="button" class="btn ghost sim-replay">Replay demo</button></div><div class="sim-output"><div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>Word document preview</span></div><div class="sim-content" id="simOutputArea"><div class="sim-doc-preview">Click <strong>Open Word</strong> to begin the simulation.</div></div></div><ol class="sim-log" id="simLog"></ol></div></div>`;
+ }
+ return "";
 }
+function renderStep(){const module=modules[state.activeModule];const step=module.steps[state.activeStep];if(!module||!step)return;state.currentQuizPassed=!step.quiz;if(el.moduleCounter)el.moduleCounter.textContent=`Module ${module.id} of ${modules.length}`;if(el.stageEyebrow)el.stageEyebrow.textContent=`Module ${module.id}`;if(el.stageTitle)el.stageTitle.textContent=module.title;if(el.stageDescription)el.stageDescription.textContent=module.description;if(el.stageStepCount)el.stageStepCount.textContent=`Step ${state.activeStep+1} of ${module.steps.length}`;if(el.stageStatus)el.stageStatus.textContent=isModuleComplete(state.activeModule)?"Completed":"In progress";if(el.practiceTask)el.practiceTask.textContent=module.practice;if(el.keyTakeaway)el.keyTakeaway.textContent=module.takeaway;const modulePercent=Math.round(((state.activeStep+1)/module.steps.length)*100);if(el.moduleProgressLabel)el.moduleProgressLabel.textContent=`Step ${state.activeStep+1}`;if(el.moduleProgressFill)el.moduleProgressFill.style.width=`${modulePercent}%`;if(el.moduleProgressText)el.moduleProgressText.textContent=`${state.activeStep+1} of ${module.steps.length} steps viewed in this module`;
+ let listMarkup="";if(step.list?.length){const tag=step.listType==="ol"?"ol":"ul";listMarkup=`<${tag}>${step.list.map(item=>`<li>${item}</li>`).join("")}</${tag}>`;}
+ let quizMarkup="";if(step.quiz){quizMarkup=`<div class="quiz-box"><strong>${step.quiz.question}</strong><div class="quiz-options">${step.quiz.options.map((option,i)=>`<button type="button" class="option-btn" data-index="${i}">${option}</button>`).join("")}</div><button type="button" class="btn secondary" id="checkAnswerBtn">Check answer</button><div class="feedback" id="quizFeedback"></div><div class="quiz-lock-note">You need the correct answer before you can continue to the next step.</div></div>`;}
+ if(el.stepCard){el.stepCard.innerHTML=`<span class="step-label">Guided step</span><h3>${step.title}</h3><p>${step.body}</p>${listMarkup}${step.callout?`<div class="callout">${step.callout}</div>`:""}${getSimulationMarkup(step.simulation)}${quizMarkup}`;}
+ const prevDisabled=state.activeStep===0;if(el.prevStepBtn){el.prevStepBtn.disabled=prevDisabled;el.prevStepBtn.style.opacity=prevDisabled?"0.5":"1";el.prevStepBtn.style.cursor=prevDisabled?"not-allowed":"pointer";}
+ if(el.nextStepBtn){el.nextStepBtn.textContent=state.activeStep===module.steps.length-1?(state.activeModule===modules.length-1?"Finish tutorial":"Complete module"):"Next step";if(step.quiz){el.nextStepBtn.disabled=true;el.nextStepBtn.style.opacity="0.5";el.nextStepBtn.style.cursor="not-allowed";}else{el.nextStepBtn.disabled=false;el.nextStepBtn.style.opacity="1";el.nextStepBtn.style.cursor="pointer";}}
+ attachQuizHandlers(step);attachSimulationHandlers(step);setStepStatus(state.activeModule,state.activeStep,{viewed:true});setLastLocation(state.activeModule,state.activeStep)}
+function attachQuizHandlers(step){if(!step.quiz||!el.stepCard)return;const optionButtons=el.stepCard.querySelectorAll(".option-btn");const checkButton=el.stepCard.querySelector("#checkAnswerBtn");const feedback=el.stepCard.querySelector("#quizFeedback");let selectedIndex=null;optionButtons.forEach(btn=>{btn.addEventListener("click",()=>{optionButtons.forEach(item=>item.classList.remove("selected"));btn.classList.add("selected");selectedIndex=Number(btn.dataset.index);if(feedback)feedback.textContent=""})});if(checkButton){checkButton.addEventListener("click",()=>{if(!feedback)return;if(selectedIndex===null){feedback.textContent="Please choose an answer first.";feedback.style.color="#b45309";return;}optionButtons.forEach(item=>item.classList.remove("correct","incorrect"));const correctIndex=step.quiz.correctIndex;const selectedButton=[...optionButtons].find(btn=>Number(btn.dataset.index)===selectedIndex);const correctButton=[...optionButtons].find(btn=>Number(btn.dataset.index)===correctIndex);if(selectedIndex===correctIndex){if(selectedButton)selectedButton.classList.add("correct");feedback.textContent=step.quiz.feedback;feedback.style.color="#166534";state.currentQuizPassed=true;setStepStatus(state.activeModule,state.activeStep,{quizPassed:true});if(el.nextStepBtn){el.nextStepBtn.disabled=false;el.nextStepBtn.style.opacity="1";el.nextStepBtn.style.cursor="pointer";}}else{if(selectedButton)selectedButton.classList.add("incorrect");if(correctButton)correctButton.classList.add("correct");feedback.textContent=`Not quite. ${step.quiz.retryHint||"Review the step carefully and try again."}`;feedback.style.color="#9f1239";state.currentQuizPassed=false;setStepStatus(state.activeModule,state.activeStep,{quizPassed:false});if(el.nextStepBtn){el.nextStepBtn.disabled=true;el.nextStepBtn.style.opacity="0.5";el.nextStepBtn.style.cursor="not-allowed";}}})}}
+function addSimLog(logEl,message){if(!logEl)return;const item=document.createElement("li");item.textContent=message;logEl.appendChild(item)}
+function clearButtonState(buttons){buttons.forEach(btn=>btn.classList.remove("selected","next-target"))}
+function markActive(buttons,button){clearButtonState(buttons);if(button)button.classList.add("selected")}
+function markDone(button){if(!button)return;button.classList.add("correct");button.disabled=true;button.classList.remove("next-target")}
+function setNextTarget(buttons,button,instructionEl,message){clearButtonState(buttons);buttons.forEach(btn=>{if(!btn.classList.contains("correct"))btn.disabled=true});if(button){button.disabled=false;button.classList.add("next-target")}if(instructionEl)instructionEl.innerHTML=message}
 
-function getModuleKey(moduleIndex) {
-  return `module_${moduleIndex}`;
+function attachSimulationHandlers(step){
+ if(!step.simulation||!el.stepCard)return;
+ const output=el.stepCard.querySelector("#simOutputArea");
+ const log=el.stepCard.querySelector("#simLog");
+ const instruction=el.stepCard.querySelector("#simInstruction");
+ const buttons=[...el.stepCard.querySelectorAll(".sim-action")];
+ const replayBtn=el.stepCard.querySelector(".sim-replay");
+ const simState={open:false,created:false,named:false,saved:false,wordOpen:false,tabOpen:false,citationInserted:false};
+ function updateOutput(html){if(output)output.innerHTML=html}
+ function resetLocalState(){Object.keys(simState).forEach(k=>simState[k]=false);if(log)log.innerHTML="";buttons.forEach(btn=>{btn.disabled=true;btn.classList.remove("selected","next-target","correct")})}
+ function initLibraryDemo(){resetLocalState();const btnOpen=buttons.find(b=>b.dataset.simAction==="open-endnote");if(btnOpen){btnOpen.disabled=false;btnOpen.classList.add("next-target")}if(instruction)instruction.innerHTML='Start here: click <strong>Open EndNote</strong>.';updateOutput('<p>Select <strong>Open EndNote</strong> to begin the walkthrough.</p>')}
+ function initWordDemo(){resetLocalState();const btnOpen=buttons.find(b=>b.dataset.simAction==="open-word");if(btnOpen){btnOpen.disabled=false;btnOpen.classList.add("next-target")}if(instruction)instruction.innerHTML='Start here: click <strong>Open Word</strong>.';updateOutput('<div class="sim-doc-preview">Click <strong>Open Word</strong> to begin the simulation.</div>')}
+ if(step.simulation.type==="libraryCreate"){
+   const btnOpen=buttons.find(b=>b.dataset.simAction==="open-endnote");
+   const btnCreate=buttons.find(b=>b.dataset.simAction==="choose-new-library");
+   const btnName=buttons.find(b=>b.dataset.simAction==="name-library");
+   const btnSave=buttons.find(b=>b.dataset.simAction==="save-library");
+   initLibraryDemo();
+   buttons.forEach(button=>button.addEventListener("click",()=>{
+     const action=button.dataset.simAction; markActive(buttons,button);
+     if(action==="open-endnote"){simState.open=true;updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>EndNote start screen</span></div><div class="sim-content"><div class="sim-doc-preview sim-highlight"><span class="sim-pill">EndNote opened</span><p>Welcome screen loaded. You can now create a new library.</p><div class="sim-file-row"><span>Main actions</span><strong>Create a New Library | Open Existing Library</strong></div></div></div></div>`);addSimLog(log,"Opened EndNote.");markDone(btnOpen);setNextTarget(buttons,btnCreate,instruction,'Good. Now click <strong>Create New Library</strong>.');}
+     if(action==="choose-new-library"&&simState.open){simState.created=true;updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>Create a New Library</span></div><div class="sim-content"><div class="sim-doc-preview sim-highlight"><span class="sim-pill">Dialog opened</span><div class="sim-file-row"><span>File name</span><strong>MyResearch.enl</strong></div><div class="sim-file-row"><span>Folder</span><strong>Documents/EndNote Practice</strong></div></div></div></div>`);addSimLog(log,"Selected Create a New Library.");markDone(btnCreate);setNextTarget(buttons,btnName,instruction,'Now click <strong>Name Library</strong>. Watch the file field update.');}
+     if(action==="name-library"&&simState.created){simState.named=true;updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>Create a New Library</span></div><div class="sim-content"><div class="sim-doc-preview"><span class="sim-pill">Library named</span><div class="sim-file-row sim-highlight"><span>Library file</span><strong>MyResearch.enl</strong></div><div class="sim-file-row"><span>Folder</span><strong>Documents/EndNote Practice</strong></div></div></div></div>`);addSimLog(log,"Named the library MyResearch.enl.");markDone(btnName);setNextTarget(buttons,btnSave,instruction,'Finally, click <strong>Save Library</strong>.');}
+     if(action==="save-library"&&simState.named){simState.saved=true;updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>MyResearch.enl</span></div><div class="sim-content"><div class="sim-file-row sim-highlight"><span>Library status</span><strong>Ready for references</strong></div><div class="sim-ref-row"><span>All References</span><strong>0 references</strong></div><div class="sim-ref-row"><span>Groups</span><strong>My Groups</strong></div><div class="sim-ref-row"><span>Mode</span><strong>Library created successfully</strong></div></div></div>`);addSimLog(log,"Saved the library and opened it.");markDone(btnSave);if(instruction)instruction.innerHTML='Done. You have completed the demo. Review the highlighted result, then continue.';setStepStatus(state.activeModule,state.activeStep,{simulationCompleted:true});}
+   }));
+   replayBtn?.addEventListener("click",initLibraryDemo);
+ }
+ if(step.simulation.type==="wordCitation"){
+   const btnOpenWord=buttons.find(b=>b.dataset.simAction==="open-word");
+   const btnOpenTab=buttons.find(b=>b.dataset.simAction==="open-endnote-tab");
+   const btnInsert=buttons.find(b=>b.dataset.simAction==="insert-citation");
+   const btnShow=buttons.find(b=>b.dataset.simAction==="show-bibliography");
+   initWordDemo();
+   buttons.forEach(button=>button.addEventListener("click",()=>{
+     const action=button.dataset.simAction; markActive(buttons,button);
+     if(action==="open-word"){simState.wordOpen=true;updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>Word document preview</span></div><div class="sim-content"><div class="sim-doc-preview sim-highlight">This is a research sentence waiting for a citation.</div></div></div>`);addSimLog(log,"Opened Word.");markDone(btnOpenWord);setNextTarget(buttons,btnOpenTab,instruction,'Good. Now click <strong>Open EndNote Tab</strong>.');}
+     if(action==="open-endnote-tab"&&simState.wordOpen){simState.tabOpen=true;updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>Word document preview</span></div><div class="sim-content"><div class="sim-pill sim-highlight">EndNote tab active</div><div class="sim-file-row sim-highlight"><span>Ribbon tools</span><strong>Insert Citation | Style | Update Citations and Bibliography</strong></div><div class="sim-doc-preview">This is a research sentence waiting for a citation.</div></div></div>`);addSimLog(log,"Opened the EndNote tab in Word.");markDone(btnOpenTab);setNextTarget(buttons,btnInsert,instruction,'Now click <strong>Insert Citation</strong>. Watch the sentence change.');}
+     if(action==="insert-citation"&&simState.tabOpen){simState.citationInserted=true;updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>Word document preview</span></div><div class="sim-content"><div class="sim-pill">Citation inserted</div><div class="sim-doc-preview">This is a research sentence <span class="sim-inline-citation sim-highlight">(Smith, 2020)</span> that now includes an in-text citation.</div></div></div>`);addSimLog(log,"Inserted the citation (Smith, 2020).");markDone(btnInsert);setNextTarget(buttons,btnShow,instruction,'Finally, click <strong>Show Bibliography</strong>. Watch the references section appear.');}
+     if(action==="show-bibliography"&&simState.citationInserted){updateOutput(`<div class="sim-window"><div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>Word document preview</span></div><div class="sim-content"><div class="sim-pill">Bibliography generated</div><div class="sim-doc-preview">This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.<div class="sim-bibliography sim-highlight"><strong>References</strong><p>Smith, J. (2020). <em>Introduction to Research Writing</em>. Academic Press.</p></div></div></div></div>`);addSimLog(log,"Displayed the bibliography preview.");markDone(btnShow);if(instruction)instruction.innerHTML='Done. You have completed the demo. Review the highlighted result, then continue.';setStepStatus(state.activeModule,state.activeStep,{simulationCompleted:true});}
+   }));
+   replayBtn?.addEventListener("click",initWordDemo);
+ }
 }
-
-function getStepKey(moduleIndex, stepIndex) {
-  return `module_${moduleIndex}_step_${stepIndex}`;
-}
-
-function isModuleComplete(moduleIndex) {
-  return Boolean(state.progress[getModuleKey(moduleIndex)]?.completed);
-}
-
-function setModuleComplete(moduleIndex) {
-  const key = getModuleKey(moduleIndex);
-  state.progress[key] = {
-    ...(state.progress[key] || {}),
-    completed: true
-  };
-  saveProgress();
-}
-
-function setStepStatus(moduleIndex, stepIndex, patch) {
-  const key = getStepKey(moduleIndex, stepIndex);
-  state.progress[key] = {
-    ...(state.progress[key] || {}),
-    ...patch
-  };
-  saveProgress();
-}
-
-function setLastLocation(moduleIndex, stepIndex) {
-  state.progress.lastLocation = { moduleIndex, stepIndex };
-  saveProgress();
-}
-
-function getCompletedCount() {
-  return modules.filter((_, index) => isModuleComplete(index)).length;
-}
-
-function updateOverallProgress() {
-  const completed = getCompletedCount();
-  const total = modules.length;
-  const percent = Math.round((completed / total) * 100);
-
-  if (el.progressPercent) el.progressPercent.textContent = `${percent}%`;
-  if (el.progressFill) el.progressFill.style.width = `${percent}%`;
-  if (el.progressText) el.progressText.textContent = `${completed} of ${total} modules completed`;
-}
-
-function renderSidebarModules() {
-  if (!el.moduleList) return;
-  el.moduleList.innerHTML = "";
-
-  modules.forEach((module, index) => {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = `module-item ${index === state.activeModule ? "active" : ""} ${isModuleComplete(index) ? "complete" : ""}`;
-    item.innerHTML = `
-      <strong>Module ${module.id}: ${module.title}</strong>
-      <small>${module.description}</small>
-    `;
-    item.addEventListener("click", () => {
-      state.activeModule = index;
-      state.activeStep = 0;
-      showTraining();
-      renderAll();
-    });
-    el.moduleList.appendChild(item);
-  });
-}
-
-function renderOverview() {
-  if (!el.overviewGrid) return;
-  el.overviewGrid.innerHTML = "";
-
-  modules.forEach((module, index) => {
-    const card = document.createElement("article");
-    card.className = "overview-card";
-    card.innerHTML = `
-      <p class="eyebrow">Module ${module.id}</p>
-      <h3>${module.title}</h3>
-      <p>${module.description}</p>
-    `;
-    card.addEventListener("click", () => {
-      state.activeModule = index;
-      state.activeStep = 0;
-      showTraining();
-      renderAll();
-    });
-    el.overviewGrid.appendChild(card);
-  });
-}
-
-function getSimulationMarkup(simulation) {
-  if (!simulation) return "";
-
-  if (simulation.type === "libraryCreate") {
-    return `
-      <div class="simulation-box">
-        <h4>Interactive demo: create a library</h4>
-        <p>Click through the same order a real beginner would follow in EndNote.</p>
-        <div class="sim-instruction" id="simInstruction">Start here: click <strong>Open EndNote</strong>.</div>
-        <div class="sim-guidance"><span class="sim-guidance-arrow">↓</span><span>Follow the highlighted button.</span></div>
-        <div class="sim-toolbar">
-          <button type="button" class="btn secondary sim-action" data-sim-action="open-endnote">Open EndNote</button>
-          <button type="button" class="btn secondary sim-action" data-sim-action="choose-new-library">Create New Library</button>
-          <button type="button" class="btn secondary sim-action" data-sim-action="name-library">Name Library</button>
-          <button type="button" class="btn secondary sim-action" data-sim-action="save-library">Save Library</button>
-        </div>
-        <div class="sim-output">
-          <div class="sim-window">
-            <div class="sim-window-bar">
-              <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
-              <span>EndNote preview</span>
-            </div>
-            <div class="sim-content" id="simOutputArea">
-              <p>Select <strong>Open EndNote</strong> to begin the walkthrough.</p>
-            </div>
-          </div>
-          <ol class="sim-log" id="simLog"></ol>
-        </div>
-      </div>
-    `;
-  }
-
-  if (simulation.type === "wordCitation") {
-    return `
-      <div class="simulation-box">
-        <h4>Interactive demo: insert a citation in Word</h4>
-        <p>Use the demo controls to mimic a simple Cite While You Write workflow.</p>
-        <div class="sim-instruction" id="simInstruction">Start here: click <strong>Open Word</strong>.</div>
-        <div class="sim-guidance"><span class="sim-guidance-arrow">↓</span><span>Follow the highlighted button.</span></div>
-        <div class="sim-toolbar">
-          <button type="button" class="btn secondary sim-action" data-sim-action="open-word">Open Word</button>
-          <button type="button" class="btn secondary sim-action" data-sim-action="open-endnote-tab">Open EndNote Tab</button>
-          <button type="button" class="btn secondary sim-action" data-sim-action="insert-citation">Insert Citation</button>
-          <button type="button" class="btn secondary sim-action" data-sim-action="show-bibliography">Show Bibliography</button>
-        </div>
-        <div class="sim-output">
-          <div class="sim-window">
-            <div class="sim-window-bar">
-              <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
-              <span>Word document preview</span>
-            </div>
-            <div class="sim-content" id="simOutputArea">
-              <div class="sim-doc-preview">Click <strong>Open Word</strong> to begin the simulation.</div>
-            </div>
-          </div>
-          <ol class="sim-log" id="simLog"></ol>
-        </div>
-      </div>
-    `;
-  }
-
-  return "";
-}
-
-function renderStep() {
-  const module = modules[state.activeModule];
-  const step = module.steps[state.activeStep];
-  if (!module || !step) return;
-
-  state.currentQuizPassed = !step.quiz;
-
-  if (el.moduleCounter) el.moduleCounter.textContent = `Module ${module.id} of ${modules.length}`;
-  if (el.stageEyebrow) el.stageEyebrow.textContent = `Module ${module.id}`;
-  if (el.stageTitle) el.stageTitle.textContent = module.title;
-  if (el.stageDescription) el.stageDescription.textContent = module.description;
-  if (el.stageStepCount) el.stageStepCount.textContent = `Step ${state.activeStep + 1} of ${module.steps.length}`;
-  if (el.stageStatus) el.stageStatus.textContent = isModuleComplete(state.activeModule) ? "Completed" : "In progress";
-  if (el.practiceTask) el.practiceTask.textContent = module.practice;
-  if (el.keyTakeaway) el.keyTakeaway.textContent = module.takeaway;
-
-  const modulePercent = Math.round(((state.activeStep + 1) / module.steps.length) * 100);
-  if (el.moduleProgressLabel) el.moduleProgressLabel.textContent = `Step ${state.activeStep + 1}`;
-  if (el.moduleProgressFill) el.moduleProgressFill.style.width = `${modulePercent}%`;
-  if (el.moduleProgressText) el.moduleProgressText.textContent = `${state.activeStep + 1} of ${module.steps.length} steps viewed in this module`;
-
-  let listMarkup = "";
-  if (step.list?.length) {
-    const tag = step.listType === "ol" ? "ol" : "ul";
-    listMarkup = `<${tag}>${step.list.map(item => `<li>${item}</li>`).join("")}</${tag}>`;
-  }
-
-  let quizMarkup = "";
-  if (step.quiz) {
-    quizMarkup = `
-      <div class="quiz-box">
-        <strong>${step.quiz.question}</strong>
-        <div class="quiz-options">
-          ${step.quiz.options.map((option, i) => `<button type="button" class="option-btn" data-index="${i}">${option}</button>`).join("")}
-        </div>
-        <button type="button" class="btn secondary" id="checkAnswerBtn">Check answer</button>
-        <div class="feedback" id="quizFeedback"></div>
-        <div class="quiz-lock-note">You need the correct answer before you can continue to the next step.</div>
-      </div>
-    `;
-  }
-
-  if (el.stepCard) {
-    el.stepCard.innerHTML = `
-      <span class="step-label">Guided step</span>
-      <h3>${step.title}</h3>
-      <p>${step.body}</p>
-      ${listMarkup}
-      ${step.callout ? `<div class="callout">${step.callout}</div>` : ""}
-      ${getSimulationMarkup(step.simulation)}
-      ${quizMarkup}
-    `;
-  }
-
-  const prevDisabled = state.activeStep === 0;
-  if (el.prevStepBtn) {
-    el.prevStepBtn.disabled = prevDisabled;
-    el.prevStepBtn.style.opacity = prevDisabled ? "0.5" : "1";
-    el.prevStepBtn.style.cursor = prevDisabled ? "not-allowed" : "pointer";
-  }
-
-  if (el.nextStepBtn) {
-    el.nextStepBtn.textContent = state.activeStep === module.steps.length - 1
-      ? (state.activeModule === modules.length - 1 ? "Finish tutorial" : "Complete module")
-      : "Next step";
-
-    if (step.quiz) {
-      el.nextStepBtn.disabled = true;
-      el.nextStepBtn.style.opacity = "0.5";
-      el.nextStepBtn.style.cursor = "not-allowed";
-    } else {
-      el.nextStepBtn.disabled = false;
-      el.nextStepBtn.style.opacity = "1";
-      el.nextStepBtn.style.cursor = "pointer";
-    }
-  }
-
-  attachQuizHandlers(step);
-  attachSimulationHandlers(step);
-  setStepStatus(state.activeModule, state.activeStep, { viewed: true });
-  setLastLocation(state.activeModule, state.activeStep);
-}
-
-function attachQuizHandlers(step) {
-  if (!step.quiz || !el.stepCard) return;
-
-  const optionButtons = el.stepCard.querySelectorAll(".option-btn");
-  const checkButton = el.stepCard.querySelector("#checkAnswerBtn");
-  const feedback = el.stepCard.querySelector("#quizFeedback");
-  let selectedIndex = null;
-
-  optionButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      optionButtons.forEach(item => item.classList.remove("selected"));
-      btn.classList.add("selected");
-      selectedIndex = Number(btn.dataset.index);
-      if (feedback) feedback.textContent = "";
-    });
-  });
-
-  if (checkButton) {
-    checkButton.addEventListener("click", () => {
-      if (!feedback) return;
-
-      if (selectedIndex === null) {
-        feedback.textContent = "Please choose an answer first.";
-        feedback.style.color = "#b45309";
-        return;
-      }
-
-      optionButtons.forEach(item => item.classList.remove("correct", "incorrect"));
-      const correctIndex = step.quiz.correctIndex;
-      const selectedButton = [...optionButtons].find(btn => Number(btn.dataset.index) === selectedIndex);
-      const correctButton = [...optionButtons].find(btn => Number(btn.dataset.index) === correctIndex);
-
-      if (selectedIndex === correctIndex) {
-        if (selectedButton) selectedButton.classList.add("correct");
-        feedback.textContent = step.quiz.feedback;
-        feedback.style.color = "#166534";
-        state.currentQuizPassed = true;
-        setStepStatus(state.activeModule, state.activeStep, { quizPassed: true });
-        if (el.nextStepBtn) {
-          el.nextStepBtn.disabled = false;
-          el.nextStepBtn.style.opacity = "1";
-          el.nextStepBtn.style.cursor = "pointer";
-        }
-      } else {
-        if (selectedButton) selectedButton.classList.add("incorrect");
-        if (correctButton) correctButton.classList.add("correct");
-        feedback.textContent = `Not quite. ${step.quiz.retryHint || "Review the step carefully and try again."}`;
-        feedback.style.color = "#9f1239";
-        state.currentQuizPassed = false;
-        setStepStatus(state.activeModule, state.activeStep, { quizPassed: false });
-        if (el.nextStepBtn) {
-          el.nextStepBtn.disabled = true;
-          el.nextStepBtn.style.opacity = "0.5";
-          el.nextStepBtn.style.cursor = "not-allowed";
-        }
-      }
-    });
-  }
-}
-
-function addSimLog(logEl, message) {
-  if (!logEl) return;
-  const item = document.createElement("li");
-  item.textContent = message;
-  logEl.appendChild(item);
-}
-
-function clearButtonState(buttons) {
-  buttons.forEach(btn => btn.classList.remove("selected", "next-target"));
-}
-
-function markActive(buttons, button) {
-  clearButtonState(buttons);
-  if (button) button.classList.add("selected");
-}
-
-function markDone(button) {
-  if (!button) return;
-  button.classList.add("correct");
-  button.disabled = true;
-  button.classList.remove("next-target");
-}
-
-function setNextTarget(buttons, button, instructionEl, message) {
-  clearButtonState(buttons);
-  buttons.forEach(btn => {
-    if (!btn.classList.contains("correct")) btn.disabled = true;
-  });
-  if (button) {
-    button.disabled = false;
-    button.classList.add("next-target");
-  }
-  if (instructionEl) instructionEl.innerHTML = message;
-}
-
-function attachSimulationHandlers(step) {
-  if (!step.simulation || !el.stepCard) return;
-
-  const output = el.stepCard.querySelector("#simOutputArea");
-  const log = el.stepCard.querySelector("#simLog");
-  const instruction = el.stepCard.querySelector("#simInstruction");
-  const buttons = [...el.stepCard.querySelectorAll(".sim-action")];
-  const simState = {
-    open: false,
-    created: false,
-    named: false,
-    saved: false,
-    wordOpen: false,
-    tabOpen: false,
-    citationInserted: false
-  };
-
-  function updateOutput(html) {
-    if (!output) return;
-    output.innerHTML = html;
-  }
-
-  if (step.simulation.type === "libraryCreate") {
-    const btnOpen = buttons.find(b => b.dataset.simAction === "open-endnote");
-    const btnCreate = buttons.find(b => b.dataset.simAction === "choose-new-library");
-    const btnName = buttons.find(b => b.dataset.simAction === "name-library");
-    const btnSave = buttons.find(b => b.dataset.simAction === "save-library");
-
-    buttons.forEach(btn => btn.disabled = true);
-    if (btnOpen) btnOpen.disabled = false;
-    if (btnOpen) btnOpen.classList.add("next-target");
-
-    buttons.forEach(button => {
-      button.addEventListener("click", () => {
-        const action = button.dataset.simAction;
-        markActive(buttons, button);
-
-        if (action === "open-endnote") {
-          simState.open = true;
-          updateOutput(`
-            <div class="sim-doc-preview sim-highlight">
-              <span class="sim-pill">EndNote opened</span>
-              <p>The EndNote start screen is now visible. You can create or open a library from here.</p>
-            </div>
-          `);
-          addSimLog(log, "Opened EndNote.");
-          markDone(btnOpen);
-          setNextTarget(buttons, btnCreate, instruction, 'Good. Now click <strong>Create New Library</strong>.');
-        }
-
-        if (action === "choose-new-library") {
-          if (!simState.open) return;
-          simState.created = true;
-          updateOutput(`
-            <div class="sim-doc-preview sim-highlight">
-              <span class="sim-pill">Create a New Library</span>
-              <p>The <strong>Create a New Library</strong> dialog is ready.</p>
-              <div class="sim-file-row"><span>File name</span><strong>MyResearch.enl</strong></div>
-            </div>
-          `);
-          addSimLog(log, "Selected Create a New Library.");
-          markDone(btnCreate);
-          setNextTarget(buttons, btnName, instruction, 'Now click <strong>Name Library</strong>.');
-        }
-
-        if (action === "name-library") {
-          if (!simState.created) return;
-          simState.named = true;
-          updateOutput(`
-            <div class="sim-doc-preview sim-highlight">
-              <span class="sim-pill">Library named</span>
-              <div class="sim-file-row"><span>Library file</span><strong>MyResearch.enl</strong></div>
-              <div class="sim-file-row"><span>Location</span><strong>Documents/EndNote Practice</strong></div>
-            </div>
-          `);
-          addSimLog(log, "Named the library MyResearch.enl.");
-          markDone(btnName);
-          setNextTarget(buttons, btnSave, instruction, 'Finally, click <strong>Save Library</strong>.');
-        }
-
-        if (action === "save-library") {
-          if (!simState.named) return;
-          simState.saved = true;
-          updateOutput(`
-            <div class="sim-window sim-highlight">
-              <div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><span>MyResearch.enl</span></div>
-              <div class="sim-content">
-                <div class="sim-ref-row"><span>Library status</span><strong>Ready for references</strong></div>
-                <div class="sim-ref-row"><span>Groups</span><strong>My Groups</strong></div>
-              </div>
-            </div>
-          `);
-          addSimLog(log, "Saved the library and opened it.");
-          markDone(btnSave);
-          if (instruction) instruction.innerHTML = 'Done. You have completed the demo. Review the result preview, then continue.';
-          setStepStatus(state.activeModule, state.activeStep, { simulationCompleted: true });
-        }
-      });
-    });
-  }
-
-  if (step.simulation.type === "wordCitation") {
-    const btnOpenWord = buttons.find(b => b.dataset.simAction === "open-word");
-    const btnOpenTab = buttons.find(b => b.dataset.simAction === "open-endnote-tab");
-    const btnInsertCitation = buttons.find(b => b.dataset.simAction === "insert-citation");
-    const btnShowBibliography = buttons.find(b => b.dataset.simAction === "show-bibliography");
-
-    buttons.forEach(btn => btn.disabled = true);
-    if (btnOpenWord) btnOpenWord.disabled = false;
-    if (btnOpenWord) btnOpenWord.classList.add("next-target");
-
-    buttons.forEach(button => {
-      button.addEventListener("click", () => {
-        const action = button.dataset.simAction;
-        markActive(buttons, button);
-
-        if (action === "open-word") {
-          simState.wordOpen = true;
-          updateOutput(`
-            <div class="sim-window">
-              <div class="sim-window-bar">
-                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
-                <span>Word document preview</span>
-              </div>
-              <div class="sim-content">
-                <div class="sim-doc-preview sim-highlight">
-                  This is a research sentence waiting for a citation.
-                </div>
-              </div>
-            </div>
-          `);
-          addSimLog(log, "Opened Word.");
-          markDone(btnOpenWord);
-          setNextTarget(buttons, btnOpenTab, instruction, 'Good. Now click <strong>Open EndNote Tab</strong>.');
-        }
-
-        if (action === "open-endnote-tab") {
-          if (!simState.wordOpen) return;
-          simState.tabOpen = true;
-          updateOutput(`
-            <div class="sim-window">
-              <div class="sim-window-bar">
-                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
-                <span>Word document preview</span>
-              </div>
-              <div class="sim-content">
-                <div class="sim-pill sim-highlight">EndNote tab active</div>
-                <div class="sim-doc-preview">
-                  This is a research sentence waiting for a citation.
-                </div>
-                <div class="sim-file-row sim-highlight">
-                  <span>Ribbon tools</span>
-                  <strong>Insert Citation | Style | Update Citations and Bibliography</strong>
-                </div>
-              </div>
-            </div>
-          `);
-          addSimLog(log, "Opened the EndNote tab in Word.");
-          markDone(btnOpenTab);
-          setNextTarget(buttons, btnInsertCitation, instruction, 'Now click <strong>Insert Citation</strong>. Watch the sentence change.');
-        }
-
-        if (action === "insert-citation") {
-          if (!simState.tabOpen) return;
-          simState.citationInserted = true;
-          updateOutput(`
-            <div class="sim-window">
-              <div class="sim-window-bar">
-                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
-                <span>Word document preview</span>
-              </div>
-              <div class="sim-content">
-                <div class="sim-pill">Citation inserted</div>
-                <div class="sim-doc-preview">
-                  This is a research sentence <span class="sim-inline-citation sim-highlight">(Smith, 2020)</span> that now includes an in-text citation.
-                </div>
-              </div>
-            </div>
-          `);
-          addSimLog(log, "Inserted the citation (Smith, 2020).");
-          markDone(btnInsertCitation);
-          setNextTarget(buttons, btnShowBibliography, instruction, 'Finally, click <strong>Show Bibliography</strong>. Watch the references section appear.');
-        }
-
-        if (action === "show-bibliography") {
-          if (!simState.citationInserted) return;
-          updateOutput(`
-            <div class="sim-window">
-              <div class="sim-window-bar">
-                <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
-                <span>Word document preview</span>
-              </div>
-              <div class="sim-content">
-                <div class="sim-pill">Bibliography generated</div>
-                <div class="sim-doc-preview">
-                  This is a research sentence <span class="sim-inline-citation">(Smith, 2020)</span> that now includes an in-text citation.
-                  <div class="sim-bibliography sim-highlight">
-                    <strong>References</strong>
-                    <p>Smith, J. (2020). <em>Introduction to Research Writing</em>. Academic Press.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `);
-          addSimLog(log, "Displayed the bibliography preview.");
-          markDone(btnShowBibliography);
-          if (instruction) instruction.innerHTML = 'Done. You have completed the demo. Review the highlighted result, then continue.';
-          setStepStatus(state.activeModule, state.activeStep, { simulationCompleted: true });
-        }
-      });
-    });
-  }
-}
-
-function showScreen(screenName) {
-  [el.welcomeScreen, el.moduleOverview, el.trainingScreen, el.completionScreen].forEach(screen => {
-    if (!screen) return;
-    screen.classList.add("hidden");
-    screen.classList.remove("active-screen");
-  });
-
-  const target = {
-    welcome: el.welcomeScreen,
-    overview: el.moduleOverview,
-    training: el.trainingScreen,
-    completion: el.completionScreen
-  }[screenName];
-
-  if (!target) return;
-  target.classList.remove("hidden");
-  target.classList.add("active-screen");
-}
-
-function showTraining() {
-  showScreen("training");
-}
-
-function renderAll() {
-  updateOverallProgress();
-  renderSidebarModules();
-  renderOverview();
-  renderStep();
-}
-
-function advanceStep() {
-  const currentStep = modules[state.activeModule].steps[state.activeStep];
-  if (currentStep.quiz && !state.currentQuizPassed) return;
-
-  const module = modules[state.activeModule];
-  const isLastStep = state.activeStep === module.steps.length - 1;
-
-  if (!isLastStep) {
-    state.activeStep += 1;
-    renderAll();
-    return;
-  }
-
-  setModuleComplete(state.activeModule);
-
-  if (state.activeModule === modules.length - 1) {
-    updateOverallProgress();
-    renderSidebarModules();
-    showScreen("completion");
-    return;
-  }
-
-  state.activeModule += 1;
-  state.activeStep = 0;
-  renderAll();
-}
-
-function resumeTutorial() {
-  const last = state.progress.lastLocation;
-  if (last && Number.isInteger(last.moduleIndex) && Number.isInteger(last.stepIndex)) {
-    state.activeModule = Math.min(last.moduleIndex, modules.length - 1);
-    state.activeStep = Math.min(last.stepIndex, modules[state.activeModule].steps.length - 1);
-  }
-  showTraining();
-  renderAll();
-}
-
-function resetProgress() {
-  localStorage.removeItem(storageKey);
-  state.progress = {};
-  state.activeModule = 0;
-  state.activeStep = 0;
-  state.currentQuizPassed = false;
-  showScreen("welcome");
-  renderAll();
-}
-
-function bindEvents() {
-  if (el.startTutorialBtn) {
-    el.startTutorialBtn.addEventListener("click", () => {
-      state.activeModule = 0;
-      state.activeStep = 0;
-      showTraining();
-      renderAll();
-    });
-  }
-
-  if (el.viewModulesBtn) {
-    el.viewModulesBtn.addEventListener("click", () => showScreen("overview"));
-  }
-
-  if (el.beginFromOverviewBtn) {
-    el.beginFromOverviewBtn.addEventListener("click", () => {
-      state.activeModule = 0;
-      state.activeStep = 0;
-      showTraining();
-      renderAll();
-    });
-  }
-
-  if (el.restartTutorialBtn) el.restartTutorialBtn.addEventListener("click", resetProgress);
-  if (el.reviewModulesBtn) el.reviewModulesBtn.addEventListener("click", () => showScreen("overview"));
-
-  if (el.prevStepBtn) {
-    el.prevStepBtn.addEventListener("click", () => {
-      if (state.activeStep > 0) {
-        state.activeStep -= 1;
-        renderAll();
-      }
-    });
-  }
-
-  if (el.nextStepBtn) el.nextStepBtn.addEventListener("click", advanceStep);
-  if (el.resetProgressBtn) el.resetProgressBtn.addEventListener("click", resetProgress);
-  if (el.jumpToCurrentBtn) el.jumpToCurrentBtn.addEventListener("click", resumeTutorial);
-}
-
-bindEvents();
-renderAll();
-showScreen("welcome");
+function showScreen(screenName){[el.welcomeScreen,el.moduleOverview,el.trainingScreen,el.completionScreen].forEach(screen=>{if(!screen)return;screen.classList.add("hidden");screen.classList.remove("active-screen")});const target={welcome:el.welcomeScreen,overview:el.moduleOverview,training:el.trainingScreen,completion:el.completionScreen}[screenName];if(!target)return;target.classList.remove("hidden");target.classList.add("active-screen")}
+function showTraining(){showScreen("training")}
+function renderAll(){updateOverallProgress();renderSidebarModules();renderOverview();renderStep()}
+function advanceStep(){const currentStep=modules[state.activeModule].steps[state.activeStep];if(currentStep.quiz&&!state.currentQuizPassed)return;const module=modules[state.activeModule];const isLastStep=state.activeStep===module.steps.length-1;if(!isLastStep){state.activeStep+=1;renderAll();return;}setModuleComplete(state.activeModule);if(state.activeModule===modules.length-1){updateOverallProgress();renderSidebarModules();showScreen("completion");return;}state.activeModule+=1;state.activeStep=0;renderAll()}
+function resumeTutorial(){const last=state.progress.lastLocation;if(last&&Number.isInteger(last.moduleIndex)&&Number.isInteger(last.stepIndex)){state.activeModule=Math.min(last.moduleIndex,modules.length-1);state.activeStep=Math.min(last.stepIndex,modules[state.activeModule].steps.length-1)}showTraining();renderAll()}
+function resetProgress(){localStorage.removeItem(storageKey);state.progress={};state.activeModule=0;state.activeStep=0;state.currentQuizPassed=false;showScreen("welcome");renderAll()}
+function bindEvents(){el.startTutorialBtn?.addEventListener("click",()=>{state.activeModule=0;state.activeStep=0;showTraining();renderAll()});el.viewModulesBtn?.addEventListener("click",()=>showScreen("overview"));el.beginFromOverviewBtn?.addEventListener("click",()=>{state.activeModule=0;state.activeStep=0;showTraining();renderAll()});el.restartTutorialBtn?.addEventListener("click",resetProgress);el.reviewModulesBtn?.addEventListener("click",()=>showScreen("overview"));el.prevStepBtn?.addEventListener("click",()=>{if(state.activeStep>0){state.activeStep-=1;renderAll()}});el.nextStepBtn?.addEventListener("click",advanceStep);el.resetProgressBtn?.addEventListener("click",resetProgress);el.jumpToCurrentBtn?.addEventListener("click",resumeTutorial)}
+bindEvents();renderAll();showScreen("welcome");
