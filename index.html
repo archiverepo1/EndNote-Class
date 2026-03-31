@@ -8,120 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .quiz-lock-note {
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: #fff6e5;
-      color: #8a5a00;
-      font-size: 0.95rem;
-      border: 1px solid #f3d28d;
-    }
-    .simulation-box {
-      margin-top: 18px;
-      padding: 18px;
-      border: 1px solid #e3e8f2;
-      border-radius: 18px;
-      background: #f8fbff;
-    }
-    .simulation-box h4 {
-      margin: 0 0 10px;
-      font-size: 1rem;
-    }
-    .simulation-box p {
-      margin: 0 0 12px;
-    }
-    .sim-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .sim-output {
-      border: 1px solid #d8e1ee;
-      background: #fff;
-      border-radius: 16px;
-      padding: 16px;
-      min-height: 110px;
-    }
-    .sim-log {
-      margin-top: 12px;
-      padding-left: 18px;
-    }
-    .sim-log li + li {
-      margin-top: 6px;
-    }
-    .sim-pill {
-      display: inline-block;
-      margin-right: 8px;
-      margin-bottom: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #eef3fb;
-      color: #29405f;
-      font-size: 0.88rem;
-      font-weight: 600;
-    }
-    .sim-window {
-      border: 1px solid #cad6e5;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #ffffff;
-      box-shadow: 0 8px 20px rgba(20, 35, 70, 0.06);
-    }
-    .sim-window-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      background: #f2f5fa;
-      border-bottom: 1px solid #dde5f0;
-      font-size: 0.92rem;
-      color: #475569;
-    }
-    .sim-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #c23;
-      opacity: 0.5;
-    }
-    .sim-content {
-      padding: 16px;
-    }
-    .sim-file-row,
-    .sim-ref-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: #f7f9fc;
-      border: 1px solid #e5ebf3;
-      margin-top: 10px;
-    }
-    .sim-doc-preview {
-      padding: 16px;
-      border-radius: 16px;
-      background: #fcfdff;
-      border: 1px solid #e2e8f0;
-      line-height: 1.7;
-    }
-    .sim-inline-citation {
-      display: inline-block;
-      padding: 1px 8px;
-      border-radius: 999px;
-      background: #eef2ff;
-      border: 1px solid #c7d2fe;
-      font-weight: 700;
-    }
-    .sim-bibliography {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #e2e8f0;
-    }
-  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -159,9 +45,7 @@
       </nav>
 
       <div class="support-links card">
-        <div class="card-head">
-          <span>Official support</span>
-        </div>
+        <div class="card-head"><span>Official support</span></div>
         <a href="https://support.clarivate.com/Endnote/s/" target="_blank" rel="noopener">Clarivate EndNote Support</a>
         <a href="https://support.clarivate.com/Endnote/s/article/EndNote-2025-Help-Guide-and-Quick-Reference-Guide" target="_blank" rel="noopener">EndNote 2025 Help Guide</a>
         <a href="https://support.clarivate.com/Endnote/s/training" target="_blank" rel="noopener">Official Training</a>
@@ -191,22 +75,10 @@
           </div>
         </div>
         <div class="hero-panel">
-          <div class="mini-stat">
-            <span>Format</span>
-            <strong>Guided screens</strong>
-          </div>
-          <div class="mini-stat">
-            <span>Audience</span>
-            <strong>Students, researchers, staff</strong>
-          </div>
-          <div class="mini-stat">
-            <span>Estimated time</span>
-            <strong>25–35 minutes</strong>
-          </div>
-          <div class="mini-stat">
-            <span>Outcome</span>
-            <strong>Confident EndNote basics</strong>
-          </div>
+          <div class="mini-stat"><span>Format</span><strong>Guided screens</strong></div>
+          <div class="mini-stat"><span>Audience</span><strong>Students, researchers, staff</strong></div>
+          <div class="mini-stat"><span>Estimated time</span><strong>25–35 minutes</strong></div>
+          <div class="mini-stat"><span>Outcome</span><strong>Confident EndNote basics</strong></div>
         </div>
       </section>
 
@@ -246,27 +118,16 @@
 
             <aside class="lesson-sidebar">
               <div class="card compact">
-                <div class="card-head">
-                  <span>Module progress</span>
-                  <strong id="moduleProgressLabel">Step 1</strong>
-                </div>
-                <div class="progress-track slim">
-                  <div class="progress-fill" id="moduleProgressFill"></div>
-                </div>
+                <div class="card-head"><span>Module progress</span><strong id="moduleProgressLabel">Step 1</strong></div>
+                <div class="progress-track slim"><div class="progress-fill" id="moduleProgressFill"></div></div>
                 <p id="moduleProgressText" class="helper"></p>
               </div>
-
               <div class="card compact">
-                <div class="card-head">
-                  <span>Practice task</span>
-                </div>
+                <div class="card-head"><span>Practice task</span></div>
                 <p id="practiceTask"></p>
               </div>
-
               <div class="card compact">
-                <div class="card-head">
-                  <span>Key takeaway</span>
-                </div>
+                <div class="card-head"><span>Key takeaway</span></div>
                 <p id="keyTakeaway"></p>
               </div>
             </aside>
@@ -285,7 +146,6 @@
       </section>
     </main>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
